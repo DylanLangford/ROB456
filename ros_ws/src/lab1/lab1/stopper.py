@@ -53,10 +53,14 @@ class MyStopper(Node):
 		angle_min = scan.angle_min
 		angle_max = scan.angle_max
 		num_readings = len(scan.ranges)
+		scans = np.array(scan.ranges)
 
 		# GUIDE
 		# Use angle min, max, and number of readings to calculate the theta value for each scan
 		# This should be a numpy array of length num_readings, that starts at angle_min and ends at angle_max
+		thetas = np.linspace(angle_min,angle_max,num_readings)
+		
+		    
   # YOUR CODE HERE
 
 		# GUIDE: Determine what the closest obstacle/reading is for scans in front of the robot
@@ -69,6 +73,11 @@ class MyStopper(Node):
 		# Finally, set t.linear.x to be your desired speed (0 if stop)
 		# Suggestion: Do this with a for loop before being fancy with numpy (which is substantially faster)
 		# DO NOT hard-wire in the number of readings, or the min/max angle. You CAN hardwire in the size of the robot
+		index = (np.abs(thetas - 0)).argmin()
+		y = scans*np.sin(thetas)
+		in_front_dists = []
+		
+		        
 
 		# Create a twist and fill in all the fields (you will only set t.linear.x).
 		t = TwistStamped()
@@ -81,10 +90,20 @@ class MyStopper(Node):
 		t.twist.angular.x = 0.0
 		t.twist.angular.y = 0.0
 		t.twist.angular.z = 0.0
-
 		shortest = 0
+
 		max_speed = 0.2
   # YOUR CODE HERE
+        if (shortest > 1):
+            t.twist.linear.x = .4*np.tanh(shortest)
+        else: 
+            t.twist.linear.x = 0
+            
+		for i in range(0, num_readings):
+		    if (y[i] <= .19):
+		        in_front_dists.append(scans[i])
+        shortest = np.min(in_front_dists)
+            
 
 		# Send the command to the robot.
 		self.pub.publish(t)
