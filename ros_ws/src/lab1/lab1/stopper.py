@@ -39,77 +39,73 @@ class MyStopper(Node):
 
 		# GUIDE: Any variables that you want to add can go here
 
-	def callback(self, scan):
-		# Every time we get a laser scan, calculate the shortest scan distance in front
-		# of the robot, and set the speed accordingly.  We assume that the robot is 38cm
-		# wide.  This means that y-values with absolute values greater than 19cm are not
-		# in front of the robot.  It also assumes that the LiDAR is at the front of the
-		# robot (which it actually isn't) and that it's centered and pointing forwards.
-		# We can work around these assumptions, but it's cleaner if we don't
+def callback(self, scan):
+	# Every time we get a laser scan, calculate the shortest scan distance in front
+	# of the robot, and set the speed accordingly.  We assume that the robot is 38cm
+	# wide.  This means that y-values with absolute values greater than 19cm are not
+	# in front of the robot.  It also assumes that the LiDAR is at the front of the
+	# robot (which it actually isn't) and that it's centered and pointing forwards.
+	# We can work around these assumptions, but it's cleaner if we don't
 
-		# Pulling out some useful values from scan
-		#   Start and top angles of the scan. 0 degrees is in front of the robot
-		# Also given: Total number of scans in that range
-		angle_min = scan.angle_min
-		angle_max = scan.angle_max
-		num_readings = len(scan.ranges)
-		scans = np.array(scan.ranges)
+	# Pulling out some useful values from scan
+	#   Start and top angles of the scan. 0 degrees is in front of the robot
+	# Also given: Total number of scans in that range
+	angle_min = scan.angle_min
+	angle_max = scan.angle_max
+	num_readings = len(scan.ranges)
+	scans = np.array(scan.ranges)
 
-		# GUIDE
-		# Use angle min, max, and number of readings to calculate the theta value for each scan
-		# This should be a numpy array of length num_readings, that starts at angle_min and ends at angle_max
-		thetas = np.linspace(angle_min,angle_max,num_readings)
-		
-		    
-  # YOUR CODE HERE
+	# GUIDE
+	# Use angle min, max, and number of readings to calculate the theta value for each scan
+	# This should be a numpy array of length num_readings, that starts at angle_min and ends at angle_max
+	thetas = np.linspace(angle_min,angle_max,num_readings)
 
-		# GUIDE: Determine what the closest obstacle/reading is for scans in front of the robot
-		#  Step 1: Determine which of the range readings correspond to being "in front of" the robot (see comment at top)
-		#    Remember that robot scans are in the robot's coordinate system - theta = 0 means straight ahead
-		#  Step 2: Get the minimum distance to the closest object (use only scans "in front of" the robot)
-		#  Step 3: Use the closest distance from above to decide when to stop
-		#  Step 4: Scale how fast you move by the distance to the closet object (tanh is handy here...)
-		#  Step 5: Make sure to actually stop if close to 1 m
-		# Finally, set t.linear.x to be your desired speed (0 if stop)
-		# Suggestion: Do this with a for loop before being fancy with numpy (which is substantially faster)
-		# DO NOT hard-wire in the number of readings, or the min/max angle. You CAN hardwire in the size of the robot
-		index = (np.abs(thetas - 0)).argmin()
-		y = scans*np.sin(thetas)
-		in_front_dists = []
-		
-		        
+	# YOUR CODE HERE
 
-		# Create a twist and fill in all the fields (you will only set t.linear.x).
-		t = TwistStamped()
-		t.header = Header()
-		t.header.frame_id = 'base_link'  # Transform is in the robot's coordinate frame
-		t.header.stamp = self.get_clock().now().to_msg()  # What time are we sending this?
-		t.twist.linear.x = 0.0
-		t.twist.linear.y = 0.0
-		t.twist.linear.z = 0.0
-		t.twist.angular.x = 0.0
-		t.twist.angular.y = 0.0
-		t.twist.angular.z = 0.0
-		shortest = 0
+	# GUIDE: Determine what the closest obstacle/reading is for scans in front of the robot
+	#  Step 1: Determine which of the range readings correspond to being "in front of" the robot (see comment at top)
+	#    Remember that robot scans are in the robot's coordinate system - theta = 0 means straight ahead
+	#  Step 2: Get the minimum distance to the closest object (use only scans "in front of" the robot)
+	#  Step 3: Use the closest distance from above to decide when to stop
+	#  Step 4: Scale how fast you move by the distance to the closet object (tanh is handy here...)
+	#  Step 5: Make sure to actually stop if close to 1 m
+	# Finally, set t.linear.x to be your desired speed (0 if stop)
+	# Suggestion: Do this with a for loop before being fancy with numpy (which is substantially faster)
+	# DO NOT hard-wire in the number of readings, or the min/max angle. You CAN hardwire in the size of the robot
+	index = (np.abs(thetas - 0)).argmin()
+	y = scans*np.sin(thetas)
+	in_front_dists = []
 
-		max_speed = 0.2
-  # YOUR CODE HERE
-        if (shortest > 1):
-            t.twist.linear.x = .4*np.tanh(shortest)
-        else: 
-            t.twist.linear.x = 0
-            
-		for i in range(0, num_readings):
-		    if (y[i] <= .19):
-		        in_front_dists.append(scans[i])
-        shortest = np.min(in_front_dists)
-            
+	# Create a twist and fill in all the fields (you will only set t.linear.x).
+	t = TwistStamped()
+	t.header = Header()
+	t.header.frame_id = 'base_link'  # Transform is in the robot's coordinate frame
+	t.header.stamp = self.get_clock().now().to_msg()  # What time are we sending this?
+	t.twist.linear.x = 0.0
+	t.twist.linear.y = 0.0
+	t.twist.linear.z = 0.0
+	t.twist.angular.x = 0.0
+	t.twist.angular.y = 0.0
+	t.twist.angular.z = 0.0
+	shortest = 0
 
-		# Send the command to the robot.
-		self.pub.publish(t)
+	max_speed = 0.2
+	# YOUR CODE HERE
+	if (shortest > 1):
+		t.twist.linear.x = .4*np.tanh(shortest)
+	else:
+		t.twist.linear.x = 0
 
-		# Print out a log message to the INFO channel to let us know it's working.
-		self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
+	for i in range(0, num_readings):
+		if (y[i] <= .19):
+			in_front_dists.append(scans[i])
+	shortest = np.min(in_front_dists)
+
+	# Send the command to the robot.
+	self.pub.publish(t)
+
+	# Print out a log message to the INFO channel to let us know it's working.
+	self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
 
 
 
