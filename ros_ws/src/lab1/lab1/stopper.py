@@ -40,28 +40,27 @@ class MyStopper(Node):
 		# GUIDE: Any variables that you want to add can go here
 
 	def callback(self, scan):
-		# Every time we get a laser scan, calculate the shortest scan distance in front
-		# of the robot, and set the speed accordingly.  We assume that the robot is 38cm
-		# wide.  This means that y-values with absolute values greater than 19cm are not
-		# in front of the robot.  It also assumes that the LiDAR is at the front of the
-		# robot (which it actually isn't) and that it's centered and pointing forwards.
-		# We can work around these assumptions, but it's cleaner if we don't
+	# Every time we get a laser scan, calculate the shortest scan distance in front
+	# of the robot, and set the speed accordingly.  We assume that the robot is 38cm
+	# wide.  This means that y-values with absolute values greater than 19cm are not
+	# in front of the robot.  It also assumes that the LiDAR is at the front of the
+	# robot (which it actually isn't) and that it's centered and pointing forwards.
+	# We can work around these assumptions, but it's cleaner if we don't
 
-		# Pulling out some useful values from scan
-		#   Start and top angles of the scan. 0 degrees is in front of the robot
-		# Also given: Total number of scans in that range
+	# Pulling out some useful values from scan
+	#   Start and top angles of the scan. 0 degrees is in front of the robot
+	# Also given: Total number of scans in that range
 		angle_min = scan.angle_min
 		angle_max = scan.angle_max
 		num_readings = len(scan.ranges)
 		scans = np.array(scan.ranges)
-
+		thetas = np.linspace(angle_min,angle_max,num_readings)
 		# GUIDE
 		# Use angle min, max, and number of readings to calculate the theta value for each scan
 		# This should be a numpy array of length num_readings, that starts at angle_min and ends at angle_max
-		thetas = np.linspace(angle_min,angle_max,num_readings)
-		
-		    
-  # YOUR CODE HERE
+
+
+		# YOUR CODE HERE
 
 		# GUIDE: Determine what the closest obstacle/reading is for scans in front of the robot
 		#  Step 1: Determine which of the range readings correspond to being "in front of" the robot (see comment at top)
@@ -73,11 +72,7 @@ class MyStopper(Node):
 		# Finally, set t.linear.x to be your desired speed (0 if stop)
 		# Suggestion: Do this with a for loop before being fancy with numpy (which is substantially faster)
 		# DO NOT hard-wire in the number of readings, or the min/max angle. You CAN hardwire in the size of the robot
-		index = (np.abs(thetas - 0)).argmin()
-		y = scans*np.sin(thetas)
-		in_front_dists = []
-		
-		        
+
 
 		# Create a twist and fill in all the fields (you will only set t.linear.x).
 		t = TwistStamped()
@@ -93,17 +88,17 @@ class MyStopper(Node):
 		shortest = 0
 
 		max_speed = 0.2
-  # YOUR CODE HERE
-        if (shortest > 1):
-            t.twist.linear.x = .4*np.tanh(shortest)
-        else: 
-            t.twist.linear.x = 0
-            
+		in_front_dists = []
 		for i in range(0, num_readings):
-		    if (y[i] <= .19):
-		        in_front_dists.append(scans[i])
-        shortest = np.min(in_front_dists)
-            
+			y = scans[i]*np.sin(thetas[i])
+			if (np.abs(y) <= .19):
+				in_front_dists.append(scans[i])
+		shortest = np.min(in_front_dists)
+		if (shortest < 1):
+			t.twist.linear.x = 0
+		else:
+			t.twist.linear.x = max_speed*np.tanh(shortest - 1.0)
+		# YOUR CODE HERE
 
 		# Send the command to the robot.
 		self.pub.publish(t)
@@ -112,11 +107,10 @@ class MyStopper(Node):
 		self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
 
 
-
-# The idiom in ROS2 is to use a function to do all of the setup and work.  This
-# function is referenced in the setup.py file as the entry point of the node when
-# we're running the node with ros2 run.  The function should have one argument, for
-# passing command line arguments, and it should default to None.
+		# The idiom in ROS2 is to use a function to do all of the setup and work.  This
+		# function is referenced in the setup.py file as the entry point of the node when
+		# we're running the node with ros2 run.  The function should have one argument, for
+		# passing command line arguments, and it should default to None.
 def main(args=None):
 	# Initialize rclpy.  We should do this every time.
 	rclpy.init(args=args)

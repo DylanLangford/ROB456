@@ -15,6 +15,7 @@ import numpy as np
 
 # Our priority queue
 import heapq
+import math
 
 
 # -------------- Showing start and end and path ---------------
@@ -194,23 +195,64 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #    Now do the instructions from the slide (the actual algorithm)
         #  See also lecture slides
         # YOUR CODE HERE
+        # visited[current_node_ij] = (visited_distance,visited_parent,True)
+        # if current_node_ij== goal_loc: 
+        #     break
+        # if visited[current_node_ij][2]:
+        #     continue 
+        # else: 
+        #     visited[current_node_ij] = (visited_distance, visited_parent, True)
+        
+        if visited_closed_yn:
+            continue
+        visited[current_node_ij] = (visited_distance, visited_parent, True)
+        if current_node_ij == goal_loc:
+            break
+            
 
-    # Now check that we actually found the goal node
-    if not goal_loc in visited:
-        print(f"Goal {goal_loc} not reached, taking closest")
+        # for adj in eight_connected(current_node_ij):
+        #     if not is_free(im, adj):
+        #         continue
+        #     else: 
+        #         heapq.heappush(priority_queue, (adj[0],adj[1]))   
+        #         visited[adj] = (distance_to_current_node,current_node_ij,False)
+        for adj in eight_connected(current_node_ij):
+            if not is_free(im, adj):
+                continue
+            edge_weight = math.dist(current_node_ij, adj)
+            new_dist = distance_to_current_node + edge_weight
+            
+            if adj not in visited or new_dist < visited[adj][0]:
+                visited[adj] = (new_dist, current_node_ij, False)
+                heapq.heappush(priority_queue, (new_dist, adj))         
 
-        # GUIDE: Deal with not being able to get to the goal loc
+    # GUIDE: Deal with not being able to get to the goal loc
         #   If the goal location is not reachable, find the node closest to the goal 
         #.  and return the path to it - you'll want this for the ROS 2 assignment
         # YOUR CODE HERE
 
+    if goal_loc in visited:
+        path_node = goal_loc
+    else:
+        # print(f"Goal {goal_loc} not reached, taking closest")
+        min_dist = float('inf')
+        closest = None
+        for node in visited:
+            d = math.dist(node, goal_loc)
+            if d < min_dist:
+                min_dist = d
+                closest = node
+        path_node = closest
+
     path = []
-    path.append(goal_loc)
-    # GUIDE: Build the path by starting at the goal node and working backwards
-    # YOUR CODE HERE
+    curr = path_node
+    while curr is not None:
+        if not is_free(im, curr):
+            break
+        path.append(curr)
+        curr = visited[curr][1]
 
-    return path
-
+    return path[::-1]
 
 def open_image(im_name):
     """ A helper function to open up the image and the yaml file and threshold
@@ -228,7 +270,7 @@ def open_image(im_name):
               "Assignments/Data/" + im_name, 
               "Skills/Data/" + im_name,
               "../../../../Skills/Data/" + im_name,
-              "../../../../Assignments/Data" + im_name,
+              "../../../../Assignments/Data/" + im_name,
               ]
     im = None
     print(f"{os.getcwd()}")

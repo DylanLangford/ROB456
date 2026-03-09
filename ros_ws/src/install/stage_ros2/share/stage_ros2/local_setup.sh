@@ -1,0 +1,1 @@
+/home/langford/github/ROB456/ros_ws/src/build/stage_ros2/ament_cmake_environment_hooks/local_setup.sh
