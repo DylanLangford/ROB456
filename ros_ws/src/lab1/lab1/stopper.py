@@ -74,18 +74,18 @@ class MyStopper(Node):
 		# DO NOT hard-wire in the number of readings, or the min/max angle. You CAN hardwire in the size of the robot
 
 
-		# Create a twist and fill in all the fields (you will only set t.linear.x).
-		t = TwistStamped()
-		t.header = Header()
-		t.header.frame_id = 'base_link'  # Transform is in the robot's coordinate frame
-		t.header.stamp = self.get_clock().now().to_msg()  # What time are we sending this?
-		t.twist.linear.x = 0.0
-		t.twist.linear.y = 0.0
-		t.twist.linear.z = 0.0
-		t.twist.angular.x = 0.0
-		t.twist.angular.y = 0.0
-		t.twist.angular.z = 0.0
-		shortest = 0
+	# Create a twist and fill in all the fields (you will only set t.linear.x).
+	t = TwistStamped()
+	t.header = Header()
+	t.header.frame_id = 'base_link'  # Transform is in the robot's coordinate frame
+	t.header.stamp = self.get_clock().now().to_msg()  # What time are we sending this?
+	t.twist.linear.x = 0.0
+	t.twist.linear.y = 0.0
+	t.twist.linear.z = 0.0
+	t.twist.angular.x = 0.0
+	t.twist.angular.y = 0.0
+	t.twist.angular.z = 0.0
+	shortest = 0
 
 		max_speed = 0.2
 		in_front_dists = []
@@ -100,11 +100,11 @@ class MyStopper(Node):
 			t.twist.linear.x = max_speed*np.tanh(shortest - 1.0)
 		# YOUR CODE HERE
 
-		# Send the command to the robot.
-		self.pub.publish(t)
+	# Send the command to the robot.
+	self.pub.publish(t)
 
-		# Print out a log message to the INFO channel to let us know it's working.
-		self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
+	# Print out a log message to the INFO channel to let us know it's working.
+	self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
 
 
 		# The idiom in ROS2 is to use a function to do all of the setup and work.  This
