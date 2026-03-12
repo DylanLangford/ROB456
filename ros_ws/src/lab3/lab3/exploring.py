@@ -18,6 +18,8 @@
 import numpy as np
 import os
 
+from ros_ws.src.lab3.lab3.path_planning import eight_connected
+
 # Your path planning code
 try:
     import lab3.path_planning as path_planning
@@ -98,6 +100,11 @@ def is_reachable(im, pix):
     #  False otherwise
     # You can use four or eight connected - eight will return more points
     # YOUR CODE HERE
+    
+    adj = eight_connected(pix)
+    for i in adj:
+        if path_planning.is_free(im, i):
+            return True
     return False
 
 
@@ -109,7 +116,9 @@ def find_all_possible_goals(im):
     @return list of possible pixel (x,y) locations"""
 
     # YOUR CODE HERE
-
+    goals = im[0:-1, 0:-1] == 128
+    free = im[1:, 1:] == 0
+    return goals & free
 
 def find_best_point(im, possible_points : list, robot_loc):
     """ Pick one of the unseen points to go to
@@ -118,6 +127,7 @@ def find_best_point(im, possible_points : list, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
+        
 
 
 def find_waypoints(im, path):
