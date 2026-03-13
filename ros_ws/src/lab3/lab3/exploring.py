@@ -18,7 +18,7 @@
 import numpy as np
 import os
 
-from ros_ws.src.lab3.lab3.path_planning import eight_connected
+# from ros_ws.src.lab3.lab3.path_planning import eight_connected
 
 # Your path planning code
 try:
@@ -101,7 +101,7 @@ def is_reachable(im, pix):
     # You can use four or eight connected - eight will return more points
     # YOUR CODE HERE
     
-    adj = eight_connected(pix)
+    adj = path_planning.eight_connected(pix)
     for i in adj:
         if path_planning.is_free(im, i):
             return True
