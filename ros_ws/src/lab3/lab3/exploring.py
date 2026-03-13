@@ -116,13 +116,16 @@ def find_all_possible_goals(im):
     @return list of possible pixel (x,y) locations"""
 
     # YOUR CODE HERE
-    goals = im[1:-1, 1:-1] == 128
+    smaller_im = im[1:-1,1:-1]
+    rows, cols = np.where(smaller_im == 128)
+    goals = list(zip(cols, rows))
     free = []
     for i in goals:
         for j in path_planning.four_connected(i):
             if path_planning.is_free(im, j):
                 free.append(i)
-    return goals & free
+        # print(i)
+    return free
 
 def find_best_point(im, possible_points : list, robot_loc):
     """ Pick one of the unseen points to go to
@@ -131,11 +134,16 @@ def find_best_point(im, possible_points : list, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
+    x = np.sqrt((robot_loc[0]-possible_points[0][0])**2+(robot_loc[1]-possible_points[0][1])**2)
+    min_dist = possible_points[0]
     for i in possible_points:
-        if is_reachable(im, i):
-            if robot_loc != i:
-                return i
+        distance = np.sqrt((robot_loc[0]-i[0])**2+(robot_loc[1]-i[1])**2)
+        if distance < x and path_planning.is_free(im, i):
+            x = distance
+            min_dist = i
+    return min_dist
 
+    
 def find_waypoints(im, path):
     """ Place waypoints along the path
     @param im - the thresholded image
