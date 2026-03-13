@@ -116,8 +116,8 @@ def find_all_possible_goals(im):
     @return list of possible pixel (x,y) locations"""
 
     # YOUR CODE HERE
-    goals = im[0:-1, 0:-1] == 128
-    free = im[1:, 1:] == 0
+    goals = im[1:-1, 1:-1] == 128
+    free = goals[0:] or goals[1:] or goals[:, 0:-1] or goals[:, 1:] ==0
     return goals & free
 
 def find_best_point(im, possible_points : list, robot_loc):
