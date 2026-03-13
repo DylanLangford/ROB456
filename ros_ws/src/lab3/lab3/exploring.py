@@ -127,6 +127,11 @@ def find_best_point(im, possible_points : list, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
+    for i in possible_points:
+        if is_reachable(im, i):
+            if robot_loc != i:
+                return i
+    
         
 
 
@@ -138,6 +143,8 @@ def find_waypoints(im, path):
 
     # Again, no right answer here
     # YOUR CODE HERE
+    segmented_path = path[::5]
+    return segmented_path
 
 
 def test_unseen(im, pts):
