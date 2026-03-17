@@ -18,6 +18,8 @@
 import numpy as np
 import os
 
+# from ros_ws.src.lab3.lab3.path_planning import eight_connected
+
 # Your path planning code
 try:
     import lab3.path_planning as path_planning
@@ -98,6 +100,11 @@ def is_reachable(im, pix):
     #  False otherwise
     # You can use four or eight connected - eight will return more points
     # YOUR CODE HERE
+    
+    adj = path_planning.eight_connected(pix)
+    for i in adj:
+        if path_planning.is_free(im, i):
+            return True
     return False
 
 
@@ -109,7 +116,16 @@ def find_all_possible_goals(im):
     @return list of possible pixel (x,y) locations"""
 
     # YOUR CODE HERE
-
+    smaller_im = im[1:-1,1:-1]
+    rows, cols = np.where(smaller_im == 128)
+    goals = list(zip(cols, rows))
+    free = []
+    for i in goals:
+        for j in path_planning.four_connected(i):
+            if path_planning.is_free(im, j):
+                free.append(i)
+        # print(i)
+    return free
 
 def find_best_point(im, possible_points : list, robot_loc):
     """ Pick one of the unseen points to go to
@@ -118,8 +134,16 @@ def find_best_point(im, possible_points : list, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
+    x = np.sqrt((robot_loc[0]-possible_points[0][0])**2+(robot_loc[1]-possible_points[0][1])**2)
+    min_dist = possible_points[0]
+    for i in possible_points:
+        distance = np.sqrt((robot_loc[0]-i[0])**2+(robot_loc[1]-i[1])**2)
+        if distance < x and path_planning.is_free(im, i):
+            x = distance
+            min_dist = i
+    return min_dist
 
-
+    
 def find_waypoints(im, path):
     """ Place waypoints along the path
     @param im - the thresholded image
@@ -128,6 +152,8 @@ def find_waypoints(im, path):
 
     # Again, no right answer here
     # YOUR CODE HERE
+    segmented_path = path[::5]
+    return segmented_path
 
 
 def test_unseen(im, pts):
