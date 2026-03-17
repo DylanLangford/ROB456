@@ -230,6 +230,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #   If the goal location is not reachable, find the node closest to the goal 
         #.  and return the path to it - you'll want this for the ROS 2 assignment
         # YOUR CODE HERE
+        
 
     if goal_loc in visited:
         path_node = goal_loc
