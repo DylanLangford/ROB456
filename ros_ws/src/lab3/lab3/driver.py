@@ -44,6 +44,10 @@ class Lab3Driver(Node):
         self.cmd_pub = self.create_publisher(TwistStamped, 'cmd_vel', 1)
         self.target_pub = self.create_publisher(Marker, 'current_target', 1)
 
+        self.lastdist = float('inf') # last distance
+        self.stucktic = 0 # stuck counter
+        self.stuckacceptable = 10 #amount of acceptable ticks to not have moved
+
         self.sub = self.create_subscription(
             LaserScan, 'base_scan', self.scan_callback, 10
         )
@@ -124,7 +128,7 @@ class Lab3Driver(Node):
 
     def close_enough(self):
         distance = self.distance_to_target()
-        return distance < self.threshold
+        return distance < self.threshold 
 
     def distance_to_target(self):
         if self.target is None:
@@ -144,13 +148,38 @@ class Lab3Driver(Node):
         result.success = False
 
         self.set_target()
+        
+        self.lastdist = float('inf') # last distance
+        self.stucktic = 0
 
         rate = self.create_rate(0.5)
+
+        
 
         while not self.close_enough():
 
             if not self.goal:
                 return result
+            
+            currentdist = self.distance_to_target()
+            stucktolerance = 0.02
+
+
+            if fabs(currentdist - self.lastdist) < stucktolerance:
+                self.stucktic = self.stucktic + 1
+            else:
+                self.stucktic = 0
+
+            self.lastdist = currentdist
+
+            if self.stucktic > self.stuckacceptable:
+                self.get_logger().info("Rob stuck :(")
+                self.goal = None
+                self.cmd_pub.publish(self.zero_twist())
+
+                goal_handle.abort()
+                return result
+
 
             feedback = NavTarget.Feedback()
             feedback.distance.data = self.distance_to_target()
