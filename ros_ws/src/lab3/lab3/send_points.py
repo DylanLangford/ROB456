@@ -407,7 +407,6 @@ class SendPoints(Node):
   # YOUR CODE HERE
 		im_u = (pt_xy[0] - info.origin.position.x)/info.resolution
 		im_v = (pt_xy[1] - info.origin.position.y)/info.resolution
-		# print(f"{im_u}+hi")
 		# self.get_logger().info(f"before {pt_xy} after {im_u}, {im_v}")
 		return (int(im_u), int(im_v))
 			
