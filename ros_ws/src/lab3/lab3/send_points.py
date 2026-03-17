@@ -422,6 +422,10 @@ class SendPoints(Node):
 		# GUIDE: Multiply by the resolution then add the origin position of the map 
   # YOUR CODE HERE
 		# self.get_logger().info(f"before {pt_uv} after {pt_x}, {pt_y}")
+
+		pt_x = info.resolution * pt_uv[0] + info.origin[0]
+		pt_x = info.resolution * pt_uv[1] + info.origin[1]
+
 		return (pt_x, pt_y)
 
 	def map_callback(self, map_msg : OccupancyGrid):
