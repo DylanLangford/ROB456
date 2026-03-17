@@ -259,6 +259,8 @@ class Lab3Driver(Node):
         left_dists = []
         right_dists = []
 
+        obstacle_threshold = .5
+
         for i in range(num_readings):
             y = scans[i] * np.sin(thetas[i])
 
@@ -276,13 +278,13 @@ class Lab3Driver(Node):
         left_range = np.min(left_dists) if left_dists else float('inf')
         right_range = np.min(right_dists) if right_dists else float('inf')
 
-        if front_range < self.threshold:
+        if front_range < obstacle_threshold:
             if left_range > right_range:
                 return True, 0.0, np.pi / 2
             else:
                 return True, 0.0, -np.pi / 2
 
-        if left_range < self.threshold or right_range < self.threshold:
+        if left_range < obstacle_threshold or right_range < obstacle_threshold:
             if left_range < right_range:
                 return True, 0.0, np.pi / 2
             else:
