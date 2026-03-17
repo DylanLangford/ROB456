@@ -405,8 +405,8 @@ class SendPoints(Node):
 		# GUIDE: Subtract the origin position of the map and then divide by the resolution
 		#   Don't forget to cast to an int
   # YOUR CODE HERE
-		im_u = pt_xy[0]/info.resolution - info.origin[0]
-		im_v = pt_xy[1]/info.resolution - info.origin[1]
+		im_u = pt_xy[0]/info.resolution - info.origin.x
+		im_v = pt_xy[1]/info.resolution - info.origin.y
 		# self.get_logger().info(f"before {pt_xy} after {im_u}, {im_v}")
 		return (im_u, im_v)
 			
@@ -423,8 +423,8 @@ class SendPoints(Node):
   # YOUR CODE HERE
 		# self.get_logger().info(f"before {pt_uv} after {pt_x}, {pt_y}")
 
-		pt_x = info.resolution * pt_uv[0] + info.origin[0]
-		pt_x = info.resolution * pt_uv[1] + info.origin[1]
+		pt_x = info.resolution * pt_uv[0] + info.origin.x
+		pt_x = info.resolution * pt_uv[1] + info.origin.y
 
 		return (pt_x, pt_y)
 
