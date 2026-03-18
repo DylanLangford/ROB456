@@ -115,17 +115,26 @@ def find_all_possible_goals(im):
     @param im - thresholded image
     @return list of possible pixel (x,y) locations"""
 
-    # YOUR CODE HERE
-    smaller_im = im[1:-1,1:-1]
-    rows, cols = np.where(smaller_im == 128)
-    goals = list(zip(cols, rows))
-    free = []
-    for i in goals:
-        for j in path_planning.four_connected(i):
-            if path_planning.is_free(im, j):
-                free.append(i)
-        # print(i)
-    return free
+    #YOUR CODE HERE
+
+    # smaller_im = im[1:-1,1:-1]
+    # rows, cols = np.where(smaller_im == 128)
+    # goals = list(zip(cols, rows))
+    # free = []
+    # for i in goals:
+    #     for j in path_planning.four_connected(i):
+    #         if path_planning.is_free(im, j):
+    #             free.append(i)
+    # return free
+
+    possible_goals = []
+    for i in range(1, im.shape[1]-1):
+        for j in range(1, im.shape[0]-1):
+            if path_planning.is_unseen(im, (i,j)) and is_reachable(im, (i,j)):
+                possible_goals.append((i,j))
+    return possible_goals
+
+
 
 def find_best_point(im, possible_points : list, robot_loc):
     """ Pick one of the unseen points to go to
@@ -134,16 +143,74 @@ def find_best_point(im, possible_points : list, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
-    x = np.sqrt((robot_loc[0]-possible_points[0][0])**2+(robot_loc[1]-possible_points[0][1])**2)
-    min_dist = possible_points[0]
-    for i in possible_points:
-        distance = np.sqrt((robot_loc[0]-i[0])**2+(robot_loc[1]-i[1])**2)
-        if distance < x and path_planning.is_free(im, i):
-            x = distance
-            min_dist = i
-    return min_dist
 
+    # if not possible_points:
+    #     return None
+
+    # x = np.sqrt((robot_loc[0]-possible_points[0][0])**2+(robot_loc[1]-possible_points[0][1])**2)
+    # min_dist = possible_points[0]
+    # for i in possible_points:
+    #     distance = np.sqrt((robot_loc[0]-i[0])**2+(robot_loc[1]-i[1])**2)
+    #     if distance < x:
+    #         x = distance
+    #         min_dist = i
     
+    # if not path_planning.is_free(im, min_dist):
+    #     for neighbor in path_planning.eight_connected(min_dist):
+    #         if path_planning.is_free(im, neighbor):
+    #             min_dist = neighbor
+    # return min_dist
+
+    if not possible_points:
+        return None
+
+    # --- Configuration ---
+    # resolution is typically 0.05m/pixel. 
+    # 1.5 meters / 0.05 = 30 pixels. Adjust this 'deadzone' as needed.
+    pixel_deadzone = 30 
+
+    # Ensure everything is integer pixel coordinates
+    possible_points = [(int(p[0]), int(p[1])) for p in possible_points]
+    robot_loc = (int(robot_loc[0]), int(robot_loc[1]))
+
+    min_dist = float('inf')
+    best_pt = None
+
+    for pt in possible_points:
+        dx = robot_loc[0] - pt[0]
+        dy = robot_loc[1] - pt[1]
+        dist = np.sqrt(dx*dx + dy*dy)
+
+        # --- THE FIX: Ignore points that are too close (noise/backtracking) ---
+        if dist < pixel_deadzone:
+            continue
+
+        if dist < min_dist:
+            # Optional: Check if the point is actually a "good" frontier 
+            # (e.g., call your test_best(im, pt) here if you have one)
+            min_dist = dist
+            best_pt = pt
+
+    # If everything was in the deadzone, just grab the absolute closest 
+    # so the robot doesn't stand still.
+    if best_pt is None:
+        return None
+
+    # --- 2. Ensure the point is actually reachable (is_free) ---
+    if not path_planning.is_free(im, best_pt):
+        for neighbor in path_planning.eight_connected(best_pt):
+            neighbor = (int(neighbor[0]), int(neighbor[1]))
+            if (0 <= neighbor[1] < im.shape[0] and 
+                0 <= neighbor[0] < im.shape[1]):
+                if path_planning.is_free(im, neighbor):
+                    best_pt = neighbor
+                    break
+
+    return best_pt
+
+
+
+ 
 def find_waypoints(im, path):
     """ Place waypoints along the path
     @param im - the thresholded image

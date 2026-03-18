@@ -102,7 +102,7 @@ class SendPoints(Node):
 		
 		# Run out of goal points
 		if self.next_goal_index >= len(self.goal_points):
-			self.next_goal_index += 1
+			#self.next_goal_index += 1
 			self.get_logger().info("No more points to send")
 			return
 			
@@ -201,6 +201,11 @@ class SendPoints(Node):
 	def add_more_goal_points(self, goal_pts: list):
 		""" Add more goal points; should be a list of tuples of x,y locations
 		GUIDE: Use this if you just want to append more goals to the current list"""
+
+		if goal_pts is None:
+			self.get_logger().warn("No goal points received (NoneType). Skipping.")
+			return
+
 		for pt in goal_pts:
 			self.goal_points.append(pt)
 
@@ -214,20 +219,36 @@ class SendPoints(Node):
 		""" Replace the current list of goal points, and, optionally, skip the current
 		@param goal_pts: a list of tuples of x,y locations
 		@param skip_current: Will call skip-current for you after setting up new goals"""
-		self.next_goal_index = 0
+		# self.next_goal_index = 0
 
-		# Just doing this to make sure the points you pass in are in the correct form
-		self.goal_points = []
-		for p in goal_pts:
-			self.goal_points.append((p[0], p[1]))
+		# # Just doing this to make sure the points you pass in are in the correct form
+		# self.goal_points = []
+		# for p in goal_pts:
+		# 	self.goal_points.append((p[0], p[1]))
 		
+		# if skip_current:
+		# 	self.skip_current_goal()
+
+		# self._set_goal_markers()
+		# # This will kick start sending more goal points if it's stopped sending
+		# if self._result_future == None:
+		# 	self.start_timer.reset()   # Increment to the next goal
+
+		self.get_logger().info(f"Replacing goals. New goal count: {len(goal_pts)}")
+        
+		with self.mutex:
+			self.next_goal_index = 0
+			self.goal_points = [(p[0], p[1]) for p in goal_pts]
+			self.last_distance = 1e30 # Reset distance safety
+
 		if skip_current:
 			self.skip_current_goal()
 
 		self._set_goal_markers()
-		# This will kick start sending more goal points if it's stopped sending
-		if self._result_future == None:
-			self.start_timer.reset()   # Increment to the next goal
+		
+		# Ensure the timer is ready to send the new point immediately
+		if self._send_goal_future is None:
+			self.start_timer.reset()
 
 	def _set_goal_markers(self):
 		""" Update the goal markers whenever the goals change"""
@@ -458,6 +479,7 @@ class SendPoints(Node):
 		self.get_logger().info(f"Robot current location {robot_current_loc_in_map}")
 
 		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
+<<<<<<< HEAD
 		# all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
 		# reachable_pts = []
 		# for p in all_unseen_pts:
@@ -474,6 +496,19 @@ class SendPoints(Node):
 		# 	best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_map)
 		# 	self.add_more_goal_points(best_point)
 		all_unseen_pts = find_all_possible_goals(im_thresh)
+=======
+		reachable_pts = []
+		all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
+	
+		for p in all_unseen_pts:
+			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
+			reachable_pts.append(map_xy)
+
+		# points_to_send = SendPoints(reachable_pts)
+		# executor_new = MultiThreadedExecutor()
+		# executor_new.add_node(points_to_send)
+		# executor_new.spin()
+>>>>>>> 0b15abc (IT MIGHT BE WORKING UIWBUIADBUIDW)
 
 		reachable_pts = []
 		for p in all_unseen_pts:
@@ -506,25 +541,75 @@ class SendPoints(Node):
 		#   If we're on the way to the current goal, path plan to the closest goal point that is reachable
 		#   If we're headed towards the last goal, get a goal from best_pt
 
-		# The final goal point in image coords
-		if len(self.goal_points) > 0:		
-			goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=self.goal_points[-1])
-		else:
-			goal_loc_in_image = (map_msg.info.width // 2, map_msg.info.height // 2)
+		# # The final goal point in image coords
+		# if len(self.goal_points) > 0:		
+		# 	goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=self.goal_points[-1])
+		# else:
+		# 	self.get_logger().info("No goals left, searching for best frontier point...")
+		# 	best_pt_px = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+		# 	#goal_loc_in_image = (map_msg.info.width // 2, map_msg.info.height // 2)
 
+<<<<<<< HEAD
 		if 0 < goal_loc_in_image[0] < map_msg.info.width and 0 < goal_loc_in_image[1] < map_msg.info.height:
 			# Headed towards last goal and it is now in the free space of the robot
 			goal_loc_in_image = find_best_point(im, all_unseen_pts, robot_current_loc_in_image)  # Use your exploring code to find a good point
 			self.get_logger().info(f"Getting best {goal_loc_in_image} {is_free(im, goal_loc_in_image)}")
+=======
+		# 	if best_pt_px is not None:
+		# 		# 2. Convert that pixel to world coordinates (meters)
+		# 		best_pt_world = self.from_image_to_map(map_msg, best_pt_px)
+				
+		# 		# 3. Update THIS node's goal list.
+		# 		# Wrap the point in a list [] because replace_goal_points expects a list of tuples.
+		# 		self.replace_goal_points([best_pt_world], skip_current=False)
+				
+		# 		# Update our local variable so the rest of the callback knows the new goal
+		# 		goal_loc_in_image = best_pt_px
+		# 	else:
+		# 		# Default to center if absolutely nothing is found
+		# 		goal_loc_in_image = (map_msg.info.width // 2, map_msg.info.height // 2)
+		# 	# points_to_send = SendPoints(find_best_point(im_thresh, reachable_pts, robot_current_loc_in_image))
+		# 	# executor_new = MultiThreadedExecutor()
+		# 	# executor_new.add_node(points_to_send)
+		# 	# executor_new.spin()
+
+		# if 0 < goal_loc_in_image[0] < map_msg.info.width and 0 < goal_loc_in_image[1] < map_msg.info.height:
+		# 	# Headed towards last goal and it is now in the free space of the robot
+		# 	goal_loc_in_image = find_best_point(im, all_unseen_pts, robot_current_loc_in_image)  # Use your exploring code to find a good point
+		# 	# goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+		# 	self.get_logger().info(f"Getting best {goal_loc_in_image} {is_free(im, goal_loc_in_image)}")
+		# else:
+		# 	# This just looks for the last viable goal (that is free) - will grab a goal
+		# 	#  that's already been seen
+		# 	if self.goal_points:
+		# 		for p in self.goal_points:
+		# 			try_goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=p)
+		# 			if try_goal_loc_in_image[0] < map_msg.info.width and try_goal_loc_in_image[1] < map_msg.info.height:
+		# 				if is_free(im_thresh, try_goal_loc_in_image):
+		# 					goal_loc_in_image = try_goal_loc_in_image
+
+		# --- 1. SET THE HIGH-LEVEL TARGET ---
+		if self.completed_all_goals():
+			self.get_logger().info("No goals left, searching for best frontier point...")
+			best_pt_px = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+
+			if best_pt_px is not None:
+				best_pt_world = self.from_image_to_map(map_msg, best_pt_px)
+				# IMPORTANT: Only replace if it's a new, valid point
+				self.replace_goal_points([best_pt_world], skip_current=False)
+				goal_loc_in_image = best_pt_px
+			else:
+				self.get_logger().warn("No reachable frontiers found!")
+				goal_loc_in_image = robot_current_loc_in_image
+>>>>>>> 0b15abc (IT MIGHT BE WORKING UIWBUIADBUIDW)
 		else:
-			# This just looks for the last viable goal (that is free) - will grab a goal
-			#  that's already been seen
-			if self.goal_points:
-				for p in self.goal_points:
-					try_goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=p)
-					if try_goal_loc_in_image[0] < map_msg.info.width and try_goal_loc_in_image[1] < map_msg.info.height:
-						if is_free(im_thresh, try_goal_loc_in_image):
-							goal_loc_in_image = try_goal_loc_in_image
+			# FIX: Ensure we don't go out of bounds if next_goal_index was incremented
+			idx = max(0, self.next_goal_index - 1)
+			if idx < len(self.goal_points):
+				current_goal_world = self.goal_points[idx]
+				goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=current_goal_world)
+			else:
+				goal_loc_in_image = robot_current_loc_in_image
 
 		# GUIDE: This calls dijkstra with the goal location and plots the path that you return in RViz
 		#  Note: If you did not fix your code to deal with an unreachable point then this will handle that case
@@ -552,6 +637,7 @@ class SendPoints(Node):
 
 		# GUIDE: This replaces the last goal if the robot has gone through the first two.
 		# THIS IS AN EXAMPLE of how to replace goal points. You can also use skip_current_goal and add_more_goal_points
+<<<<<<< HEAD
 		# if self.completed_all_goals():		
 		# 	self.get_logger().info(f"Replacing way points with new ones {path_pts}")	
 		# 	self.replace_goal_points(path_pts, False)
@@ -559,6 +645,12 @@ class SendPoints(Node):
 		if len(path_pts) > 0:
 			self.get_logger().info(f"Updating waypoints {path_pts}")
 			self.replace_goal_points(path_pts, True)
+=======
+		
+		# if self.completed_all_goals():		
+		# 	self.get_logger().info(f"Replacing way points with new ones {path_pts}")	
+		# 	self.replace_goal_points(path_pts, False)
+>>>>>>> 0b15abc (IT MIGHT BE WORKING UIWBUIADBUIDW)
 
 
 # Unlike all the previous code, here we'll start up with a list of points to go to
@@ -568,8 +660,12 @@ def main(args=None):
 
 	# Create a list of points that will take the robot through the map
 
-	points = [(-4.5, -3.0), (-4.5, 0.0), (-1.0, 0.0)]
+	# points = [(-4.5, -3.0), (-4.5, 0.0), (-1.0, 0.0)]
+	# send_points = SendPoints(points)
+
+	points = [(-4.5, -3.0)]
 	send_points = SendPoints(points)
+	
 
 	# Multi-threaded execution
 	executor = MultiThreadedExecutor()
