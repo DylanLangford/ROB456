@@ -33,6 +33,7 @@ from lab3.path_planning import dijkstra, is_free
 from lab3.exploring import find_all_possible_goals, find_best_point, find_waypoints
 
 
+
 class SendPoints(Node):
 	def __init__(self, points):
 		""" Initialize way points
@@ -197,6 +198,9 @@ class SendPoints(Node):
 	# 		return True    # Went through all goals
 	def completed_all_goals(self):
 		return self.next_goal_index >= len(self.goal_points)
+	
+	def last_goal_point(self):
+		return self.goal_points[-1]
 	
 	def add_more_goal_points(self, goal_pts: list):
 		""" Add more goal points; should be a list of tuples of x,y locations
@@ -544,7 +548,7 @@ class SendPoints(Node):
 		# --- 1. SET THE HIGH-LEVEL TARGET ---
 		if self.completed_all_goals():
 			self.get_logger().info("No goals left, searching for best frontier point...")
-			best_pt_px = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+			best_pt_px = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image, self.goal_points[-1])
 
 			if best_pt_px is not None:
 				best_pt_world = self.from_image_to_map(map_msg, best_pt_px)
@@ -602,11 +606,11 @@ def main(args=None):
 
 	# Create a list of points that will take the robot through the map
 
-	# points = [(-4.5, -3.0), (-4.5, 0.0), (-1.0, 0.0)]
-	# send_points = SendPoints(points)
-
-	points = [(-4.5, -3.0)]
+	points = [(-4.5, -3.0), (-4.5, 0.0), (-1.0, 0.0)]
 	send_points = SendPoints(points)
+
+	# points = [(-4.5, -3.0)]
+	# send_points = SendPoints(points)
 	
 
 	# Multi-threaded execution

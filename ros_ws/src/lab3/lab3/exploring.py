@@ -22,6 +22,11 @@ import os
 
 # Your path planning code
 try:
+    import lab3.send_points as send_points
+except:
+    import send_points as send_points
+
+try:
     import lab3.path_planning as path_planning
 except:
     import path_planning as path_planning
@@ -136,7 +141,7 @@ def find_all_possible_goals(im):
 
 
 
-def find_best_point(im, possible_points : list, robot_loc):
+def find_best_point(im, possible_points : list, robot_loc, last_goal = None):
     """ Pick one of the unseen points to go to
     @param im - thresholded image
     @param possible_points - possible points to chose from (list of tuples)
@@ -167,7 +172,7 @@ def find_best_point(im, possible_points : list, robot_loc):
     # --- Configuration ---
     # resolution is typically 0.05m/pixel. 
     # 1.5 meters / 0.05 = 30 pixels. Adjust this 'deadzone' as needed.
-    pixel_deadzone = 30 
+    pixel_deadzone = 40
 
     # Ensure everything is integer pixel coordinates
     possible_points = [(int(p[0]), int(p[1])) for p in possible_points]
@@ -184,6 +189,13 @@ def find_best_point(im, possible_points : list, robot_loc):
         # --- THE FIX: Ignore points that are too close (noise/backtracking) ---
         if dist < pixel_deadzone:
             continue
+        
+        # Ignore points that are too close to point we are currently going to
+        if last_goal is not None:
+            dist_to_last = np.sqrt((pt[0] - last_goal[0])**2 + (pt[1] - last_goal[1])**2)
+            if dist_to_last < (pixel_deadzone / 2):
+                continue
+
 
         if dist < min_dist:
             # Optional: Check if the point is actually a "good" frontier 
