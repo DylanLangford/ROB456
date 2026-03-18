@@ -259,7 +259,7 @@ class Lab3Driver(Node):
         left_dists = []
         right_dists = []
 
-        obstacle_threshold = .5
+        obstacle_threshold = .3
 
         for i in range(num_readings):
             y = scans[i] * np.sin(thetas[i])
@@ -300,7 +300,7 @@ class Lab3Driver(Node):
         distance = self.distance_to_target()
 
         if distance > 1:
-            t.twist.linear.x = 0.4
+            t.twist.linear.x = 0.7
         else:
             t.twist.linear.x = 0.2 * np.tanh(distance)
 

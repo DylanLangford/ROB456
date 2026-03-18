@@ -458,15 +458,16 @@ class SendPoints(Node):
 		self.get_logger().info(f"Robot current location {robot_current_loc_in_map}")
 
 		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
+		all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
+
 		reachable_pts = []
-		if (self.completed_all_goals()):
-			all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
-		
-			for p in all_unseen_pts:
-				map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
-				reachable_pts.append(map_xy)
-			best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_map)
-			self.add_more_goal_points(best_point)
+		for p in all_unseen_pts:
+			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
+			reachable_pts.append(map_xy)
+
+		if (self.completed_all_goals() and len(reachable_pts) > 0):
+			best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_image)
+			self.add_more_goal_points([best_point])
 
 
 		# This puts markers in RViz for all unseen points
@@ -523,9 +524,9 @@ class SendPoints(Node):
 
 		# GUIDE: This replaces the last goal if the robot has gone through the first two.
 		# THIS IS AN EXAMPLE of how to replace goal points. You can also use skip_current_goal and add_more_goal_points
-		if self.completed_all_goals():		
-			self.get_logger().info(f"Replacing way points with new ones {path_pts}")	
-			self.replace_goal_points(path_pts, False)
+		# if self.completed_all_goals():		
+		# 	self.get_logger().info(f"Replacing way points with new ones {path_pts}")	
+		# 	self.replace_goal_points(path_pts, False)
 
 
 # Unlike all the previous code, here we'll start up with a list of points to go to
@@ -542,7 +543,7 @@ def main(args=None):
 	executor = MultiThreadedExecutor()
 	executor.add_node(send_points)
 	executor.spin()
-	# rclpy.spin(send_points)
+	rclpy.spin(send_points)
 
 	# Make sure we shutdown everything cleanly.  This should happen, even if we don't
 	# include this line, but you should do it anyway.

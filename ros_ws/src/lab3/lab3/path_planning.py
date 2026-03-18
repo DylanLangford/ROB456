@@ -73,19 +73,27 @@ def is_unseen(im, pix=(0, 0)):
     @param im - the image
     @param pix - the pixel i,j
     @return True if pixel value 128 (the unseen color value)"""
-    if im[pix[1], pix[0]] == 128:
+    if im[int(pix[0]), int(pix[1])] == 128:
         return True
     return False
 
 
+# def is_free(im, pix=(0,0)):
+#     """ Is the pixel empty?
+#     @param im - the image
+#     @param pix - the pixel i,j
+#     return True if 255 """
+#     if im[pix] == 255:
+#         return True
+#     return False
 def is_free(im, pix=(0,0)):
-    """ Is the pixel empty?
-    @param im - the image
-    @param pix - the pixel i,j
-    return True if 255 """
-    if im[pix[1], pix[0]] == 255:
-        return True
-    return False
+    """Return True if pixel is free (255)"""
+    i, j = pix  
+
+    if i < 0 or i >= im.shape[0] or j < 0 or j >= im.shape[1]:
+        return False
+
+    return im[int(j), int(i)] == 255
 
 
 def convert_image(im, wall_threshold, free_threshold):
