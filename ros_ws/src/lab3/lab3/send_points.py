@@ -208,7 +208,7 @@ class SendPoints(Node):
 
 		# This will kick start sending more goal points if it's stopped sending
 		if self._result_future == None:
-			self.start_timer().reset()   # Increment to the next goal
+			self.start_timer.reset()   # Increment to the next goal
 	
 	def replace_goal_points(self, goal_pts: list, skip_current: bool):
 		""" Replace the current list of goal points, and, optionally, skip the current
@@ -426,7 +426,7 @@ class SendPoints(Node):
 		# self.get_logger().info(f"before {pt_uv} after {pt_x}, {pt_y}")
 
 		pt_x = info.resolution * pt_uv[0] + info.origin.position.x
-		pt_y = info.resolution * pt_uv[1] + info.origin.position.y
+		pt_x = info.resolution * pt_uv[1] + info.origin.position.y
 
 		return (pt_x, pt_y)
 
@@ -459,16 +459,29 @@ class SendPoints(Node):
 
 		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
 		all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
-
+		# reachable_pts = []
+		# for p in all_unseen_pts:
+		# 	map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
+		# 	reachable_pts.append(map_xy)
+			
+		# reachable_pts = []
+		# if (self.completed_all_goals()):
+		# 	all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
+		
+		# 	for p in all_unseen_pts:
+		# 		map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
+		# 		reachable_pts.append(map_xy)
+		# 	best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_map)
+		# 	self.add_more_goal_points(best_point)
 		reachable_pts = []
-		for p in all_unseen_pts:
-			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
-			reachable_pts.append(map_xy)
-
 		if (self.completed_all_goals() and len(reachable_pts) > 0):
 			best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_image)
 			self.add_more_goal_points([best_point])
-
+		for p in all_unseen_pts:
+			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
+			reachable_pts.append(map_xy)	
+		
+			
 
 		# This puts markers in RViz for all unseen points
 		self._set_reachable_markers(reachable_pts)
@@ -486,7 +499,6 @@ class SendPoints(Node):
 		if 0 < goal_loc_in_image[0] < map_msg.info.width and 0 < goal_loc_in_image[1] < map_msg.info.height:
 			# Headed towards last goal and it is now in the free space of the robot
 			goal_loc_in_image = find_best_point(im, all_unseen_pts, robot_current_loc_in_image)  # Use your exploring code to find a good point
-			# goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
 			self.get_logger().info(f"Getting best {goal_loc_in_image} {is_free(im, goal_loc_in_image)}")
 		else:
 			# This just looks for the last viable goal (that is free) - will grab a goal
@@ -527,6 +539,10 @@ class SendPoints(Node):
 		# if self.completed_all_goals():		
 		# 	self.get_logger().info(f"Replacing way points with new ones {path_pts}")	
 		# 	self.replace_goal_points(path_pts, False)
+		# Always keep feeding new goals when you have a path
+		if len(path_pts) > 0:
+			self.get_logger().info(f"Updating waypoints {path_pts}")
+			self.replace_goal_points(path_pts, True)
 
 
 # Unlike all the previous code, here we'll start up with a list of points to go to
@@ -543,7 +559,7 @@ def main(args=None):
 	executor = MultiThreadedExecutor()
 	executor.add_node(send_points)
 	executor.spin()
-	rclpy.spin(send_points)
+	# rclpy.spin(send_points)
 
 	# Make sure we shutdown everything cleanly.  This should happen, even if we don't
 	# include this line, but you should do it anyway.

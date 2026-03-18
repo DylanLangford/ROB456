@@ -73,7 +73,7 @@ def is_unseen(im, pix=(0, 0)):
     @param im - the image
     @param pix - the pixel i,j
     @return True if pixel value 128 (the unseen color value)"""
-    if im[int(pix[0]), int(pix[1])] == 128:
+    if im[int(pix[1]), int(pix[0])] == 128:
         return True
     return False
 
