@@ -458,7 +458,7 @@ class SendPoints(Node):
 		self.get_logger().info(f"Robot current location {robot_current_loc_in_map}")
 
 		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
-		all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
+		# all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
 		# reachable_pts = []
 		# for p in all_unseen_pts:
 		# 	map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
@@ -473,13 +473,29 @@ class SendPoints(Node):
 		# 		reachable_pts.append(map_xy)
 		# 	best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_map)
 		# 	self.add_more_goal_points(best_point)
+		all_unseen_pts = find_all_possible_goals(im_thresh)
+
 		reachable_pts = []
-		if (self.completed_all_goals() and len(reachable_pts) > 0):
-			best_point = find_best_point(im_thresh, reachable_pts, robot_current_loc_in_image)
-			self.add_more_goal_points([best_point])
 		for p in all_unseen_pts:
-			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
-			reachable_pts.append(map_xy)	
+			if is_free(im_thresh, p):
+				reachable_pts.append(p)
+
+		if self.completed_all_goals() and not self.exploring and len(reachable_pts) > 0:
+
+			best_point_img = find_best_point(
+				im_thresh,
+				reachable_pts,
+				robot_current_loc_in_image
+			)
+
+			best_point_map = self.from_image_to_map(
+				map_msg=map_msg,
+				pt_uv=best_point_img
+			)
+
+			self.add_more_goal_points([best_point_map])
+
+			self.exploring = True   
 		
 			
 
