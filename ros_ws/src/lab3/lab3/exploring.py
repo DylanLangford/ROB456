@@ -157,6 +157,9 @@ def find_best_point(im, possible_points : list, robot_loc, last_goal = None):
     # Adjust this if the robot ignores nearby rooms
     pixel_deadzone = 25 
 
+    # ~1.5 meter blocker because it kept sending points the robot was already on
+    min_robot_dist = 30
+
     # --- STAGE 1: Find the closest frontier ---
     for j in range(im.shape[0]):  # Rows (y)
         for i in range(im.shape[1]):  # Cols (x)
@@ -184,6 +187,9 @@ def find_best_point(im, possible_points : list, robot_loc, last_goal = None):
                         continue
 
                     d = math.dist(pix, robot_loc)
+
+                    if d < min_robot_dist:
+                        continue
 
                     # if the next point is near the last goal we were just at
                     # add a penalty so that it stops walking back and forth

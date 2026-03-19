@@ -415,7 +415,7 @@ class Lab3Driver(Node):
         #  Note: 0.4 is a good speed if nothing is in front of the robot
 
         min_speed = 0.05
-        max_speed = 0.6        # This moves about 0.01 m between scans
+        max_speed = 0.4        # This moves about 0.01 m between scans
         max_turn = np.pi * 0.1  # This turns about 2 degrees between scans
 
 # YOUR CODE HERE
