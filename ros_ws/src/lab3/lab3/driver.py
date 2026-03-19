@@ -51,7 +51,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 
 class Lab3Driver(Node):
-    def __init__(self, threshold=0.5):
+    def __init__(self, threshold=0.6):
         """ We have parameters this time
         @param threshold - how close do you have to be before saying you're at the goal? Set to width of robot
         """
@@ -105,7 +105,7 @@ class Lab3Driver(Node):
 
         # GUIDE: Declare any variables here
 # YOUR CODE HERE
-        self.obstacle_distance = 0.4          # meters
+        self.obstacle_distance = 0.5          # meters
         self.front_angle = 25.0 * pi / 180.0  # +/- 20 degrees
         self.target_distance = 0.0
         self.target_angle = 0.0

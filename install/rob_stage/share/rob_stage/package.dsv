@@ -1,0 +1,6 @@
+source;share/rob_stage/hook/pythonpath.ps1
+source;share/rob_stage/hook/pythonpath.dsv
+source;share/rob_stage/hook/pythonpath.sh
+source;share/rob_stage/hook/ament_prefix_path.ps1
+source;share/rob_stage/hook/ament_prefix_path.dsv
+source;share/rob_stage/hook/ament_prefix_path.sh
