@@ -234,8 +234,8 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
                             break
                 if not is_actually_safe: break
             
-            if not is_actually_safe:
-                continue   
+            # if not is_actually_safe:
+            #     continue   
 
             # ===== ADDED CODE START =====
 
@@ -286,7 +286,9 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
             break
         path.append(curr)
         curr = visited[curr][1]
-
+    for pt in path:
+        if not is_free(im,pt):
+            print("BAD POINT:", pt)
     return path[::-1]
 
 def open_image(im_name):

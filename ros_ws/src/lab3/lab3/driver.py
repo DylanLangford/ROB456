@@ -51,7 +51,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 
 class Lab3Driver(Node):
-    def __init__(self, threshold=0.5):
+    def __init__(self, threshold=0.6):
         """ We have parameters this time
         @param threshold - how close do you have to be before saying you're at the goal? Set to width of robot
         """
@@ -105,11 +105,12 @@ class Lab3Driver(Node):
 
         # GUIDE: Declare any variables here
 # YOUR CODE HERE
-        self.obstacle_distance = 0.4          # meters
+        self.obstacle_distance = 0.5          # meters
         self.front_angle = 25.0 * pi / 180.0  # +/- 20 degrees
         self.target_distance = 0.0
         self.target_angle = 0.0
         self.avoiding = False
+        self.count = 5
 
         # Timer to make sure we publish the target marker (once we get a goal)
         self.marker_timer = self.create_timer(1.0, self._marker_callback)
@@ -117,6 +118,9 @@ class Lab3Driver(Node):
         self.count_since_last_scan = 0
         self.print_twist_messages = False
         self.print_distance_messages = False
+
+        # something to try to help fix the wiggle
+        self.previous_point = None
 
     def zero_twist(self):
         """This is a helper class method to create and zero-out a twist"""
@@ -361,6 +365,11 @@ class Lab3Driver(Node):
         if not self.target:
             return False, 0.0, 0.0
         
+        # # set up to help prevent wiggling when stuck in a corner (if new target given, stop trying to avoid things)
+        # previous = self.previous_point
+        # if self.target != previous:
+        #     self.avoiding = False
+        
         # GUIDE: Use this method to collect obstacle information - is something in front of, to the left, or to 
         # the right of the robot? Start with your stopper code from Lab1
         # YOUR CODE HERE
@@ -385,11 +394,20 @@ class Lab3Driver(Node):
 
         if min_dist < self.obstacle_distance:
             # Obstacle detected — stop and turn whichever way the min side is detected on
-            
-            if front_angles[min_index] < 0:
-                return True, 0.0, pi * 0.2
-            elif front_angles[min_index] >= 0:
-                return True, 0.0, -pi * 0.2
+            if self.count == 0 and self.avoiding:
+                self.count = 5
+                if front_angles[min_index] < 0:
+                    return True, 0.0, pi * 0.2
+                elif front_angles[min_index] >= 0:
+                    return True, 0.0, -pi * 0.2
+            elif self.avoiding:
+                self.count -= 1
+            else:
+                self.count -= 1
+                if front_angles[min_index] < 0:
+                    return True, 0.0, pi * 0.2
+                elif front_angles[min_index] >= 0:
+                    return True, 0.0, -pi * 0.2
 
         #     avg_angle = sum(front_angles) / len(front_angles)
         #     turn_dir = -max_turn if avg_angle > 0 else max_turn
@@ -442,6 +460,11 @@ class Lab3Driver(Node):
         #     turn = max(-max_turn, min(max_turn, angle_to_target))
         #     t.twist.angular.z = turn
 
+        # set up to help prevent wiggling when stuck in a corner (if new target given, stop trying to avoid things)
+        previous = self.previous_point
+        if self.target != previous:
+            self.avoiding = False
+
         if not self.avoiding:
             # Use a 'gain' (P-gain). 1.0 to 1.5 is a good starting point.
             # This makes the turn speed proportional to how far off-course you are.
@@ -459,7 +482,7 @@ class Lab3Driver(Node):
 
         if not self.avoiding:
             if fabs(angle_to_target) > pi / 2.0:
-                t.twist.linear.x = 0.0
+                t.twist.linear.x = 0.2
                 # Use a higher turn speed when doing a 180
                 t.twist.angular.z = max_turn if angle_to_target > 0 else -max_turn
             elif fabs(angle_to_target) < pi / 40.0:
