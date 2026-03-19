@@ -216,29 +216,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         visited[current_node_ij] = (visited_distance, visited_parent, True)
         if current_node_ij == goal_loc:
             break
-            
-
-        # for adj in eight_connected(current_node_ij):
-        #     if not is_free(im, adj):
-        #         continue
-        #     else: 
-        #         heapq.heappush(priority_queue, (adj[0],adj[1]))   
-        #         visited[adj] = (distance_to_current_node,current_node_ij,False)
-
-
-
-
-
-
-        # for adj in eight_connected(current_node_ij):
-        #     if not is_free(im, adj):
-        #         continue
-        #     edge_weight = math.dist(current_node_ij, adj)
-        #     new_dist = distance_to_current_node + edge_weight
-            
-        #     if adj not in visited or new_dist < visited[adj][0]:
-        #         visited[adj] = (new_dist, current_node_ij, False)
-        #         heapq.heappush(priority_queue, (new_dist, adj))      
+             
         
 
         for adj in eight_connected(current_node_ij):
@@ -259,7 +237,28 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
             if not is_actually_safe:
                 continue   
 
-        
+            # ===== ADDED CODE START =====
+
+            # Ensure the neighbor itself is free
+            if not is_free(im, adj):
+                continue
+
+            # Prevent diagonal corner cutting
+            dx = adj[0] - current_node_ij[0]
+            dy = adj[1] - current_node_ij[1]
+            if abs(dx) == 1 and abs(dy) == 1:
+                if not (is_free(im, (current_node_ij[0] + dx, current_node_ij[1])) and
+                        is_free(im, (current_node_ij[0], current_node_ij[1] + dy))):
+                    continue
+
+            # Dijkstra relaxation step
+            new_dist = visited_distance + math.dist(current_node_ij, adj)
+
+            if adj not in visited or new_dist < visited[adj][0]:
+                visited[adj] = (new_dist, current_node_ij, False)
+                heapq.heappush(priority_queue, (new_dist, adj))
+
+            # ===== ADDED CODE END =====
 
     # GUIDE: Deal with not being able to get to the goal loc
         #   If the goal location is not reachable, find the node closest to the goal 
