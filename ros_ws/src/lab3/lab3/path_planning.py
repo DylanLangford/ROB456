@@ -90,7 +90,7 @@ def is_free(im, pix=(0,0)):
     """Return True if pixel is free (255)"""
     i, j = pix  
 
-    if i < 0 or i >= im.shape[0] or j < 0 or j >= im.shape[1]:
+    if i < 0 or i >= im.shape[1] or j < 0 or j >= im.shape[0]:
         return False
 
     return im[int(j), int(i)] == 255
@@ -224,15 +224,42 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #     else: 
         #         heapq.heappush(priority_queue, (adj[0],adj[1]))   
         #         visited[adj] = (distance_to_current_node,current_node_ij,False)
-        for adj in eight_connected(current_node_ij):
-            if not is_free(im, adj):
-                continue
-            edge_weight = math.dist(current_node_ij, adj)
-            new_dist = distance_to_current_node + edge_weight
+
+
+
+
+
+
+        # for adj in eight_connected(current_node_ij):
+        #     if not is_free(im, adj):
+        #         continue
+        #     edge_weight = math.dist(current_node_ij, adj)
+        #     new_dist = distance_to_current_node + edge_weight
             
-            if adj not in visited or new_dist < visited[adj][0]:
-                visited[adj] = (new_dist, current_node_ij, False)
-                heapq.heappush(priority_queue, (new_dist, adj))         
+        #     if adj not in visited or new_dist < visited[adj][0]:
+        #         visited[adj] = (new_dist, current_node_ij, False)
+        #         heapq.heappush(priority_queue, (new_dist, adj))      
+        
+
+        for adj in eight_connected(current_node_ij):
+            # --- THE STRENGTHENED CHECK ---
+            # Check a 3x3 area (radius 1) around the neighbor.
+            # If ANY of these pixels are a wall (0), this path is too dangerous.
+            is_actually_safe = True
+            for dx in range(-1, 2):
+                for dy in range(-1, 2):
+                    check_pix = (adj[0] + dx, adj[1] + dy)
+                    # Bounds check
+                    if 0 <= check_pix[0] < im.shape[1] and 0 <= check_pix[1] < im.shape[0]:
+                        if im[int(check_pix[1]), int(check_pix[0])] == 0: # It's a wall
+                            is_actually_safe = False
+                            break
+                if not is_actually_safe: break
+            
+            if not is_actually_safe:
+                continue   
+
+        
 
     # GUIDE: Deal with not being able to get to the goal loc
         #   If the goal location is not reachable, find the node closest to the goal 

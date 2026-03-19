@@ -17,6 +17,7 @@
 # The ever-present numpy
 import numpy as np
 import os
+import math
 
 # from ros_ws.src.lab3.lab3.path_planning import eight_connected
 
@@ -149,74 +150,84 @@ def find_best_point(im, possible_points : list, robot_loc, last_goal = None):
     """
     # YOUR CODE HERE
 
-    # if not possible_points:
-    #     return None
-
-    # x = np.sqrt((robot_loc[0]-possible_points[0][0])**2+(robot_loc[1]-possible_points[0][1])**2)
-    # min_dist = possible_points[0]
-    # for i in possible_points:
-    #     distance = np.sqrt((robot_loc[0]-i[0])**2+(robot_loc[1]-i[1])**2)
-    #     if distance < x:
-    #         x = distance
-    #         min_dist = i
-    
-    # if not path_planning.is_free(im, min_dist):
-    #     for neighbor in path_planning.eight_connected(min_dist):
-    #         if path_planning.is_free(im, neighbor):
-    #             min_dist = neighbor
-    # return min_dist
-
-    if not possible_points:
-        return None
-
-    # --- Configuration ---
-    # resolution is typically 0.05m/pixel. 
-    # 1.5 meters / 0.05 = 30 pixels. Adjust this 'deadzone' as needed.
-    pixel_deadzone = 40
-
-    # Ensure everything is integer pixel coordinates
-    possible_points = [(int(p[0]), int(p[1])) for p in possible_points]
-    robot_loc = (int(robot_loc[0]), int(robot_loc[1]))
-
-    min_dist = float('inf')
     best_pt = None
+    min_dist = float('inf')
+    
+    # 1.0 meters in pixels (0.05 res) = 20 pixels
+    # Adjust this if the robot ignores nearby rooms
+    pixel_deadzone = 25 
 
-    for pt in possible_points:
-        dx = robot_loc[0] - pt[0]
-        dy = robot_loc[1] - pt[1]
-        dist = np.sqrt(dx*dx + dy*dy)
+    # --- STAGE 1: Find the closest frontier ---
+    for j in range(im.shape[0]):  # Rows (y)
+        for i in range(im.shape[1]):  # Cols (x)
+            pix = (i, j)
+            
+            # A frontier is a 'Free' pixel (255) that touches an 'Unseen' pixel (128)
+            if im[j, i] == 255:
+                is_frontier = False
+                for neighbor in path_planning.eight_connected(pix):
+                    if (0 <= neighbor[0] < im.shape[1] and 0 <= neighbor[1] < im.shape[0]):
+                        if path_planning.is_unseen(im, neighbor):
+                            is_frontier = True
+                            break
+                
+                # check for free points around to see if its the wall is too close
+                if is_frontier:
+                    free_count = 0
+                    for dx in range(-2, 3):
+                        for dy in range(-2, 3):
+                            check_pix = (i + dx, j +dy)
+                            if 0 <= check_pix[0] < im.shape[1] and 0 <= check_pix[1] < im.shape[0]:
+                                if im[int(check_pix[1]), int(check_pix[0])] == 255:
+                                    free_count += 1
+                    if free_count < 15:
+                        continue
 
-        # --- THE FIX: Ignore points that are too close (noise/backtracking) ---
-        if dist < pixel_deadzone:
-            continue
-        
-        # Ignore points that are too close to point we are currently going to
-        if last_goal is not None:
-            dist_to_last = np.sqrt((pt[0] - last_goal[0])**2 + (pt[1] - last_goal[1])**2)
-            if dist_to_last < (pixel_deadzone / 2):
-                continue
+                    d = math.dist(pix, robot_loc)
 
+                    # if the next point is near the last goal we were just at
+                    # add a penalty so that it stops walking back and forth
+                    # between two points that are far away from each other
+                    # this should help reduce the times it leaves a room so 
+                    # that it finishes more of a room before it gets the 
+                    # chance to leave
+                    if last_goal is not None:
+                        dist_to_last = math.dist((i, j), last_goal)
+                        if dist_to_last < 40:
+                            d += 50.0
+                    # Ignore frontiers too close to the robot to avoid jitter
+                    if d > pixel_deadzone and d < min_dist:
+                        min_dist = d
+                        best_pt = pix
 
-        if dist < min_dist:
-            # Optional: Check if the point is actually a "good" frontier 
-            # (e.g., call your test_best(im, pt) here if you have one)
-            min_dist = dist
-            best_pt = pt
-
-    # If everything was in the deadzone, just grab the absolute closest 
-    # so the robot doesn't stand still.
     if best_pt is None:
         return None
 
-    # --- 2. Ensure the point is actually reachable (is_free) ---
-    if not path_planning.is_free(im, best_pt):
-        for neighbor in path_planning.eight_connected(best_pt):
-            neighbor = (int(neighbor[0]), int(neighbor[1]))
-            if (0 <= neighbor[1] < im.shape[0] and 
-                0 <= neighbor[0] < im.shape[1]):
-                if path_planning.is_free(im, neighbor):
-                    best_pt = neighbor
-                    break
+    # --- STAGE 2: Safety Pull (Move point off the wall) ---
+    # Frontier pixels often overlap with black wall pixels due to SLAM noise.
+    # We search outward in layers to find the nearest valid 'Free' floor.
+    found_safe_floor = False
+    
+    # Search up to 6 pixels away (30cm) to find the 'floor'
+    for radius in range(0, 7): 
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                # Only check the perimeter of the current square radius
+                if abs(dx) == radius or abs(dy) == radius:
+                    check_pt = (int(best_pt[0] + dx), int(best_pt[1] + dy))
+                    
+                    # Bounds check: i is x (shape[1]), j is y (shape[0])
+                    if 0 <= check_pt[0] < im.shape[1] and 0 <= check_pt[1] < im.shape[0]:
+                        if path_planning.is_free(im, check_pt):
+                            best_pt = check_pt
+                            found_safe_floor = True
+                            break
+            if found_safe_floor: break
+        if found_safe_floor: break
+            
+    if not found_safe_floor:
+        # If no free floor is found within 30cm, this frontier is likely noise
+        return None
 
     return best_pt
 
