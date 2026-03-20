@@ -15,6 +15,7 @@ import numpy as np
 
 # Our priority queue
 import heapq
+import math
 
 
 # -------------- Showing start and end and path ---------------
@@ -154,6 +155,7 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
 
     if not is_free(im, goal_loc):
         raise ValueError(f"ERROR: Goal location {goal_loc} is not in the free space of the map")
+    
  
     # The priority queue itself is just a list, with elements of the form (weight, (i,j))
     #    - i.e., a tuple with the first element the weight/score, the second element a tuple with the pixel location
@@ -194,11 +196,14 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #    Now do the instructions from the slide (the actual algorithm)
         #  See also lecture slides
         # YOUR CODE HERE
+        if distance_to_current_node > visited[current_node_ij][0]:
+            continue
 
         if current_node_ij == goal_loc:
+            visited[current_node_ij] = (visited_distance, visited_parent, True)
             break
-        if visited_closed_yn:
-            continue
+        # if visited_closed_yn:
+        #     continue
         visited[current_node_ij] = (visited_distance, visited_parent, True)
 
         for i in eight_connected(current_node_ij):
@@ -212,15 +217,14 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
             if i in visited and visited[i][2]:
                 continue
 
-            xdist = abs(i[0]) - current_node_ij[0]
-            ydist = abs(i[1]) - current_node_ij[1]
+            xdist = abs(i[0] - current_node_ij[0])
+            ydist = abs(i[1] - current_node_ij[1])
 
             if xdist == 1 and ydist == 1:
                 weight = np.sqrt(2)
             else:
                 weight = 1 
 
-            weight = 1
             newnode = visited_distance + weight
 
             if i not in visited or newnode < visited[i][0]:
@@ -228,38 +232,77 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
                 heapq.heappush(priority_queue, (newnode, i))
 
     # Now check that we actually found the goal node
-    if not goal_loc in visited:
-        #print(f"Goal {goal_loc} not reached, taking closest")
+    # if not goal_loc in visited:
+    #     #print(f"Goal {goal_loc} not reached, taking closest")
 
-        # GUIDE: Deal with not being able to get to the goal loc
-        #   If the goal location is not reachable, find the node closest to the goal 
-        #.  and return the path to it - you'll want this for the ROS 2 assignment
-        # YOUR CODE HERE
-        cnode = None
-        deltadist = float('inf')
-        for i in visited:
-            xdist = goal_loc[0] - i[0]
-            ydist = goal_loc[1] - i[1]
-            hypot = np.sqrt(xdist ** 2 + ydist ** 2)
+    #     # GUIDE: Deal with not being able to get to the goal loc
+    #     #   If the goal location is not reachable, find the node closest to the goal 
+    #     #.  and return the path to it - you'll want this for the ROS 2 assignment
+    #     # YOUR CODE HERE
+    #     cnode = None
+    #     deltadist = float('inf')
+    #     for i in visited:
+    #         xdist = goal_loc[0] - i[0]
+    #         ydist = goal_loc[1] - i[1]
+    #         hypot = np.sqrt(xdist ** 2 + ydist ** 2)
 
-            if hypot < deltadist:
-                cnode = i
-                deltadist = hypot
-        goal_loc = cnode
+    #         if hypot < deltadist:
+    #             cnode = i
+    #             deltadist = hypot
+    #     goal_loc = cnode
+    if goal_loc in visited:
+        path_node = goal_loc
+    else:
+        min_dist = float('inf')
+        closest = None
+        for node in visited:
+            d = math.dist(node, goal_loc)
+            if d < min_dist:
+                min_dist = d
+                closest = node
+        path_node = closest
+
             
+    # path = []
+    # current = path_node
+    # while current is not None:
+
+    #     path.append(current)
+    #     current = visited[current][1]
+    # path.reverse()
     path = []
-    current = goal_loc
+    current = path_node
+    PIXEL_STEP = 10 
+    
+    if current is not None:
+        path.append(current) # Add the Goal
+        last_added = current
 
-    while current is not None:
+        while current is not None:
+            # Calculate distance from the current pixel back to the last one we kept
+            dist = math.sqrt((current[0] - last_added[0])**2 + (current[1] - last_added[1])**2)
+            
+            if dist >= PIXEL_STEP:
+                path.append(current)
+                last_added = current
+            
+            current = visited[current][1]
 
-        path.append(current)
-        current = visited[current][1]
+        # CRITICAL: Always add the start location if it's not there
+        if robot_loc not in path:
+            path.append(robot_loc)
+
     path.reverse()
+    return path
+
+    
+
+    
 
     # GUIDE: Build the path by starting at the goal node and working backwards
     # YOUR CODE HERE
 
-    return path
+    # return path
 
 
 def open_image(im_name):
