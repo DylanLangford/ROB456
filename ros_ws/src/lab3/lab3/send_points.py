@@ -614,11 +614,11 @@ def main(args=None):
 
 	# Create a list of points that will take the robot through the map
 
-	# points = [(-4.5, -3.0), (-4.5, 0.0), (-1.0, 0.0)]
-	# send_points = SendPoints(points)
-
-	points = [(-4.5, -3.0)]
+	points = [(-4.5, -3.0), (-4.5, 0.0), (-1.0, 0.0)]
 	send_points = SendPoints(points)
+
+	# points = [(-4.5, -3.0)]
+	# send_points = SendPoints(points)
 	
 
 	# Multi-threaded execution

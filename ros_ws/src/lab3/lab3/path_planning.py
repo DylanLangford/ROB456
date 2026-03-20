@@ -206,13 +206,23 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #     continue
         visited[current_node_ij] = (visited_distance, visited_parent, True)
 
-        for i in eight_connected(current_node_ij):
-            if not (0 <= i[0] < im.shape[1] and 0 <= i[1] < im.shape[0]):
-                continue
+        for adj in eight_connected(current_node_ij):
+            # --- THE STRENGTHENED CHECK ---
+            # Check a 3x3 area (radius 1) around the neighbor.
+            # If ANY of these pixels are a wall (0), this path is too dangerous.
+            is_actually_safe = True
+            for dx in range(-1, 2):
+                for dy in range(-1, 2):
+                    check_pix = (adj[0] + dx, adj[1] + dy)
+                    # Bounds check
+                    if 0 <= check_pix[0] < im.shape[1] and 0 <= check_pix[1] < im.shape[0]:
+                        if im[int(check_pix[1]), int(check_pix[0])] == 0: # It's a wall
+                            is_actually_safe = False
+                            break
+                if not is_actually_safe: break
             
-            if not is_free(im, i):
-
-                continue
+            # if not is_actually_safe:
+            #     continue   
 
             if i in visited and visited[i][2]:
                 continue

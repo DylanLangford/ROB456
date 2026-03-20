@@ -22,7 +22,7 @@ _colcon_prefix_chain_bash_source_script() {
 COLCON_CURRENT_PREFIX="/opt/ros/kilted"
 _colcon_prefix_chain_bash_source_script "$COLCON_CURRENT_PREFIX/local_setup.bash"
 # setting COLCON_CURRENT_PREFIX avoids determining the prefix in the sourced script
-COLCON_CURRENT_PREFIX="/home/nford/Desktop/ROB456/ros_ws/install"
+COLCON_CURRENT_PREFIX="/home/david-russ/GIT/ROB456/stage_ros_ws/install"
 _colcon_prefix_chain_bash_source_script "$COLCON_CURRENT_PREFIX/local_setup.bash"
 
 # source this prefix

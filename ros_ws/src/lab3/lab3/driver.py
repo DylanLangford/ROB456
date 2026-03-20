@@ -114,6 +114,7 @@ class Lab3Driver(Node):
         self.target_distance = 0.0
         self.target_angle = 0.0
         self.avoiding = False
+        self.count = 5
 
         # Timer to make sure we publish the target marker (once we get a goal)
         self.marker_timer = self.create_timer(1.0, self._marker_callback)
@@ -419,6 +420,11 @@ class Lab3Driver(Node):
         if not self.target:
             return False, 0.0, 0.0
         
+        # # set up to help prevent wiggling when stuck in a corner (if new target given, stop trying to avoid things)
+        # previous = self.previous_point
+        # if self.target != previous:
+        #     self.avoiding = False
+        
         # GUIDE: Use this method to collect obstacle information - is something in front of, to the left, or to 
         # the right of the robot? Start with your stopper code from Lab1
         # YOUR CODE HERE
@@ -443,11 +449,20 @@ class Lab3Driver(Node):
 
         if min_dist < self.obstacle_distance:
             # Obstacle detected — stop and turn whichever way the min side is detected on
-            
-            if front_angles[min_index] < 0:
-                return True, 0.0, pi * 0.2
-            elif front_angles[min_index] >= 0:
-                return True, 0.0, -pi * 0.2
+            if self.count == 0 and self.avoiding:
+                self.count = 5
+                if front_angles[min_index] < 0:
+                    return True, 0.0, pi * 0.2
+                elif front_angles[min_index] >= 0:
+                    return True, 0.0, -pi * 0.2
+            elif self.avoiding:
+                self.count -= 1
+            else:
+                self.count -= 1
+                if front_angles[min_index] < 0:
+                    return True, 0.0, pi * 0.2
+                elif front_angles[min_index] >= 0:
+                    return True, 0.0, -pi * 0.2
 
             avg_angle = sum(front_angles) / len(front_angles)
             turn_dir = -max_turn if avg_angle > 0 else max_turn
@@ -513,6 +528,11 @@ class Lab3Driver(Node):
         # if not self.avoiding:
         #     turn = max(-max_turn, min(max_turn, angle_to_target))
         #     t.twist.angular.z = turn
+
+        # set up to help prevent wiggling when stuck in a corner (if new target given, stop trying to avoid things)
+        previous = self.previous_point
+        if self.target != previous:
+            self.avoiding = False
 
         if not self.avoiding:
             # Use a 'gain' (P-gain). 1.0 to 1.5 is a good starting point.
