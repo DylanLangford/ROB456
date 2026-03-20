@@ -1,0 +1,26 @@
+// generated from rosidl_adapter/resource/action.idl.em
+// with input from nav_targets/action/NavTarget.action
+// generated code does not contain a copyright notice
+
+#include "geometry_msgs/msg/PointStamped.idl"
+#include "std_msgs/msg/Float32.idl"
+
+module nav_targets {
+  module action {
+    @verbatim (language="comment", text=
+      "Goal")
+    struct NavTarget_Goal {
+      geometry_msgs::msg::PointStamped goal;
+    };
+    @verbatim (language="comment", text=
+      "Result")
+    struct NavTarget_Result {
+      boolean success;
+    };
+    @verbatim (language="comment", text=
+      "Feedback")
+    struct NavTarget_Feedback {
+      std_msgs::msg::Float32 distance;
+    };
+  };
+};

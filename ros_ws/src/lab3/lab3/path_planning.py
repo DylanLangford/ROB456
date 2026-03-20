@@ -15,7 +15,6 @@ import numpy as np
 
 # Our priority queue
 import heapq
-import math
 
 
 # -------------- Showing start and end and path ---------------
@@ -73,27 +72,19 @@ def is_unseen(im, pix=(0, 0)):
     @param im - the image
     @param pix - the pixel i,j
     @return True if pixel value 128 (the unseen color value)"""
-    if im[int(pix[1]), int(pix[0])] == 128:
+    if im[pix[1], pix[0]] == 128:
         return True
     return False
 
 
-# def is_free(im, pix=(0,0)):
-#     """ Is the pixel empty?
-#     @param im - the image
-#     @param pix - the pixel i,j
-#     return True if 255 """
-#     if im[pix] == 255:
-#         return True
-#     return False
 def is_free(im, pix=(0,0)):
-    """Return True if pixel is free (255)"""
-    i, j = pix  
-
-    if i < 0 or i >= im.shape[1] or j < 0 or j >= im.shape[0]:
-        return False
-
-    return im[int(j), int(i)] == 255
+    """ Is the pixel empty?
+    @param im - the image
+    @param pix - the pixel i,j
+    return True if 255 """
+    if im[pix[1], pix[0]] == 255:
+        return True
+    return False
 
 
 def convert_image(im, wall_threshold, free_threshold):
@@ -203,21 +194,12 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #    Now do the instructions from the slide (the actual algorithm)
         #  See also lecture slides
         # YOUR CODE HERE
-        # visited[current_node_ij] = (visited_distance,visited_parent,True)
-        # if current_node_ij== goal_loc: 
-        #     break
-        # if visited[current_node_ij][2]:
-        #     continue 
-        # else: 
-        #     visited[current_node_ij] = (visited_distance, visited_parent, True)
-        
+
+        if current_node_ij == goal_loc:
+            break
         if visited_closed_yn:
             continue
         visited[current_node_ij] = (visited_distance, visited_parent, True)
-        if current_node_ij == goal_loc:
-            break
-             
-        
 
         for adj in eight_connected(current_node_ij):
             # --- THE STRENGTHENED CHECK ---
@@ -237,48 +219,44 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
             # if not is_actually_safe:
             #     continue   
 
-            # ===== ADDED CODE START =====
-
-            # Ensure the neighbor itself is free
-            if not is_free(im, adj):
+            if i in visited and visited[i][2]:
                 continue
 
-            # Prevent diagonal corner cutting
-            dx = adj[0] - current_node_ij[0]
-            dy = adj[1] - current_node_ij[1]
-            if abs(dx) == 1 and abs(dy) == 1:
-                if not (is_free(im, (current_node_ij[0] + dx, current_node_ij[1])) and
-                        is_free(im, (current_node_ij[0], current_node_ij[1] + dy))):
-                    continue
+            xdist = abs(i[0]) - current_node_ij[0]
+            ydist = abs(i[1]) - current_node_ij[1]
 
-            # Dijkstra relaxation step
-            new_dist = visited_distance + math.dist(current_node_ij, adj)
+            if xdist == 1 and ydist == 1:
+                weight = np.sqrt(2)
+            else:
+                weight = 1 
 
-            if adj not in visited or new_dist < visited[adj][0]:
-                visited[adj] = (new_dist, current_node_ij, False)
-                heapq.heappush(priority_queue, (new_dist, adj))
+            weight = 1
+            newnode = visited_distance + weight
 
-            # ===== ADDED CODE END =====
+            if i not in visited or newnode < visited[i][0]:
+                visited[i] = (newnode, current_node_ij, False)
+                heapq.heappush(priority_queue, (newnode, i))
 
-    # GUIDE: Deal with not being able to get to the goal loc
+    # Now check that we actually found the goal node
+    if not goal_loc in visited:
+        #print(f"Goal {goal_loc} not reached, taking closest")
+
+        # GUIDE: Deal with not being able to get to the goal loc
         #   If the goal location is not reachable, find the node closest to the goal 
         #.  and return the path to it - you'll want this for the ROS 2 assignment
         # YOUR CODE HERE
-        
+        cnode = None
+        deltadist = float('inf')
+        for i in visited:
+            xdist = goal_loc[0] - i[0]
+            ydist = goal_loc[1] - i[1]
+            hypot = np.sqrt(xdist ** 2 + ydist ** 2)
 
-    if goal_loc in visited:
-        path_node = goal_loc
-    else:
-        # print(f"Goal {goal_loc} not reached, taking closest")
-        min_dist = float('inf')
-        closest = None
-        for node in visited:
-            d = math.dist(node, goal_loc)
-            if d < min_dist:
-                min_dist = d
-                closest = node
-        path_node = closest
-
+            if hypot < deltadist:
+                cnode = i
+                deltadist = hypot
+        goal_loc = cnode
+            
     path = []
     curr = path_node
     while curr is not None:
@@ -307,7 +285,7 @@ def open_image(im_name):
               "Assignments/Data/" + im_name, 
               "Skills/Data/" + im_name,
               "../../../../Skills/Data/" + im_name,
-              "../../../../Assignments/Data/" + im_name,
+              "../../../../Assignments/Data" + im_name,
               ]
     im = None
     print(f"{os.getcwd()}")
