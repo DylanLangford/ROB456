@@ -69,7 +69,7 @@ class Lab3Driver(Node):
         self.stuck_threshold = 0.03  # minimum allowable movment 
         self.is_reversing = False# flag for recovery
         self.reverse_start_time = self.get_clock().now()
-        self.side_threshold = 0.45 # wall detection threshhold
+        self.side_threshold = 0.45
 
         # Publisher before subscriber
         self.cmd_pub = self.create_publisher(TwistStamped, 'cmd_vel', 1)
@@ -109,16 +109,14 @@ class Lab3Driver(Node):
 
         # GUIDE: Declare any variables here
 # YOUR CODE HERE
-        
-        #obstacle avoidance variables
         self.obstacle_distance = .7          # meters before considering an obstacle
         self.front_angle = 25.0 * pi / 180.0  #span of laser scan used
-        self.target_distance = 0.0 
+        self.target_distance = 0.0
         self.target_angle = 0.0
         self.avoiding = False
         self.count = 5
 
-        # timer for the target marker
+        # Timer to make sure we publish the target marker (once we get a goal)
         self.marker_timer = self.create_timer(1.0, self._marker_callback)
 
         self.count_since_last_scan = 0
@@ -127,26 +125,25 @@ class Lab3Driver(Node):
     
     def check_if_stuck(self):
         try:
-            
             trans = self.tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time())
             curr_x = trans.transform.translation.x
             curr_y = trans.transform.translation.y
             
-            #calculate distance from last recorded position
+            # Calculate distance from last recorded "significant" position
             dist_moved = sqrt((curr_x - self.last_pos_x)**2 + (curr_y - self.last_pos_y)**2)
             now = self.get_clock().now()
 
-            # if the distance moved from last reading is greater then the minimum acceptable then we reset the timer
+            # If we've moved enough, reset the timer and update position
             if dist_moved > self.stuck_threshold:
                 self.last_pos_x = curr_x
                 self.last_pos_y = curr_y
                 self.last_move_time = now
                 return False
 
-            # if the distance moved from last reading is less then the minimum acceptable
+            # If we haven't moved enough for too long
             elapsed = (now - self.last_move_time).nanoseconds / 1e9
             if elapsed > self.stuck_timeout and not self.is_reversing:
-                self.get_logger().warn("robot stuck:(")
+                self.get_logger().warn("STUCK! Initiating recovery...")
                 self.is_reversing = True
                 self.reverse_start_time = now
                 return True
@@ -154,8 +151,8 @@ class Lab3Driver(Node):
         except Exception:
             pass
         return self.is_reversing
-    
-    def zero_twist(self):# zero velocity command
+
+    def zero_twist(self):
         """This is a helper class method to create and zero-out a twist"""
         # Don't really need to do this - the default values are zero - but can't hurt
         t = TwistStamped()
@@ -170,7 +167,7 @@ class Lab3Driver(Node):
 
         return t
 
-    def _marker_callback(self): #target markers for rviz
+    def _marker_callback(self):
         """Publishes the target so it shows up in RViz"""
         if not self.goal:
             # No goal, get rid of marker if there is one
@@ -241,13 +238,12 @@ class Lab3Driver(Node):
         @ return true/false """
 
 # YOUR CODE HERE
-# if the bot distance to target is less then the threshold accept goal reached
-
+        # DOC 
+        # Simple code to check if we're within the threshold distance of the goal. 
         return self.distance_to_target() <= self.threshold
 
     def distance_to_target(self):
         """ Communicate with send points - set to distance to target"""
-        # calculates the distance of bot to goal using x and y 
         return np.sqrt(self.target.point.x ** 2 + self.target.point.y ** 2)
     
     # Respond to the action request.
@@ -276,8 +272,7 @@ class Lab3Driver(Node):
 
         # Keep publishing feedback, then sleeping (so the laser scan can happen)
         # GUIDE: If you aren't making progress, stop the while loop and mark the goal as failed
-
-        rate = self.create_rate(5) # loop rate
+        rate = self.create_rate(5)
         while not self.close_enough():
             elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e9
             if elapsed_time > timeout_duration:

@@ -545,14 +545,15 @@ class SendPoints(Node):
 		# 				if is_free(im_thresh, try_goal_loc_in_image):
 		# 					goal_loc_in_image = try_goal_loc_in_image
 
-		# --- 1. SET THE HIGH-LEVEL TARGET ---
+		# DOC: 
+		# Have points set for new rooms, 
 		if self.completed_all_goals():
 			self.get_logger().info("No goals left, searching for best frontier point...")
 			best_pt_px = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image, self.goal_points[-1])
 
 			if best_pt_px is not None:
 				best_pt_world = self.from_image_to_map(map_msg, best_pt_px)
-				# IMPORTANT: Only replace if it's a new, valid point
+				# Only replace if it's a new, valid point
 				self.replace_goal_points([best_pt_world], skip_current=False)
 				goal_loc_in_image = best_pt_px
 			else:
