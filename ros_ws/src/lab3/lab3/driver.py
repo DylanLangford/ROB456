@@ -57,17 +57,17 @@ class Lab3Driver(Node):
         # super() class.
         super().__init__('driver')
 
-        self.goal = None
-        self.threshold = threshold
+        self.goal = None # current goal
+        self.threshold = threshold # tolerance for dist to goal
         self.avoid_direction = 0 
 
-        self.target_marker = None
+        self.target_marker = None 
         self.last_pos_x = None
         self.last_pos_y = None
         self.last_move_time = self.get_clock().now()
-        self.stuck_timeout = 3.0  
-        self.stuck_threshold = 0.03  
-        self.is_reversing = False
+        self.stuck_timeout = 3.0  #seconds before registering as stuch
+        self.stuck_threshold = 0.03  # minimum allowable movment 
+        self.is_reversing = False# flag for recovery
         self.reverse_start_time = self.get_clock().now()
         self.side_threshold = 0.45
 
@@ -109,8 +109,8 @@ class Lab3Driver(Node):
 
         # GUIDE: Declare any variables here
 # YOUR CODE HERE
-        self.obstacle_distance = .7          # meters
-        self.front_angle = 25.0 * pi / 180.0  # +/- 20 degrees
+        self.obstacle_distance = .7          # meters before considering an obstacle
+        self.front_angle = 25.0 * pi / 180.0  #span of laser scan used
         self.target_distance = 0.0
         self.target_angle = 0.0
         self.avoiding = False
@@ -310,51 +310,7 @@ class Lab3Driver(Node):
         # Set the result to True and return
         result.success = True
         return result
-    # def set_target(self):
-    #     """ Convert the goal into an x,y position (target) in the ROBOT's coordinate space
-    #     @return the new target as a Point """
-    #     if self.goal:
-    #         # Transforms for all coordinate frames in the robot are stored in a transform tree
-    #         # odom is the coordinate frame of the "world", base_link is the base link of the robot
-    #         # A transform stores a rotation/translation to go from one coordinate system to the other
-    #         transform = self.tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=1.0))
-
-    #         # This applies the transform to the Stamped Point
-
-    #         # Note: This does not work, for reasons that are unclear to me
-    #         self.target = do_transform_point(self.goal, transform)
-            
-    #         # This does the transform manually, by calculating the theta rotation from the quaternion
-
-    #         euler_ang = -atan2(2 * transform.transform.rotation.z * transform.transform.rotation.w,
-    #                            1.0 - 2 * transform.transform.rotation.z * transform.transform.rotation.z)
-
-    #         # Translate to the base link's origin
-    #         x = self.goal.point.x - transform.transform.translation.x
-    #         y = self.goal.point.y - transform.transform.translation.y
-
-    #         # Do the rotation
-    #         rot_x = x * cos(euler_ang) - y * sin(euler_ang)
-    #         rot_y = x * sin(euler_ang) + y * cos(euler_ang)
-
-    #         self.target.point.x = rot_x
-    #         self.target.point.y = rot_y
-
-    #         if self.print_distance_messages:
-    #             self.get_logger().info(f'Target relative to robot: ({self.target.point.x:.2f}, {self.target.point.y:.2f}), orig ({self.goal.point.x, self.goal.point.y})')
-
-    #     else:
-
-    #         if self.print_distance_messages:
-    #             self.get_logger().info(f'No target to get distance to')
-    #         self.target = None       
-
-    #     # GUIDE: Calculate any additional variables here
-    #     # Remember that the target's location is in its own coordinate frame at 0,0, angle 0 (x-axis)
-    #     # YOUR CODE HERE
-
-
-    #     return self.target
+    
     def set_target(self):
         # 1. Capture the goal in a local variable. 
         # If self.goal is set to None by another thread, 'current_goal' stays valid here.
@@ -491,43 +447,11 @@ class Lab3Driver(Node):
         max_speed = 0.8        # This moves about 0.01 m between scans
         max_turn = np.pi * 0.5  # This turns about 2 degrees between scans
 
-# YOUR CODE HERE
-        # if self.is_reversing:
-        #     now = self.get_clock().now()
-        #     reverse_elapsed = (now - self.reverse_start_time).nanoseconds / 1e9
-            
-        #     if reverse_elapsed < 1.5:  # Reverse for 1.5 seconds
-        #         t.twist.linear.x = -0.15 
-        #         t.twist.angular.z = 0.0
-        #     elif reverse_elapsed < 3.0: # Turn for another 1.5 seconds
-        #         t.twist.linear.x = 0.0
-        #         t.twist.angular.z = 0.5 # Adjust sign to turn toward the hallway/open space
-        #     else:
-        #         # Recovery finished, return to normal navigation
-        #         self.is_reversing = False
-        #         self.last_move_time = now # Reset timer so we don't instantly trigger again
-        #     return t
-
-        # if not self.target:
-        #     return t
-
-        # Step 1: Turn toward target
-
-                # angle_to_target = atan2(self.target.point.y,
-        #                         self.target.point.x)
-        # if angle_to_target < -0.3:
-        # 	t.twist.angular.z = -max_turn
-        # elif angle_to_target > 0.3:
-        # 	t.twist.angular.z = max_turn
-        # else:
-        # 	t.twist.angular.z = 0
 
         angle_to_target = atan2(self.target.point.y,
                                 self.target.point.x)
         
-        # if not self.avoiding:
-        #     turn = max(-max_turn, min(max_turn, angle_to_target))
-        #     t.twist.angular.z = turn
+        
 
         # set up to help prevent wiggling when stuck in a corner (if new target given, stop trying to avoid things)
         previous = self.previous_point
