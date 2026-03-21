@@ -65,9 +65,9 @@ class Lab3Driver(Node):
         self.last_pos_x = None
         self.last_pos_y = None
         self.last_move_time = self.get_clock().now()
-        self.stuck_timeout = 3.0  #seconds before registering as stuch DOC
-        self.stuck_threshold = 0.03  # minimum allowable movment  DOC
-        self.is_reversing = False# flag for recovery DOC
+        self.stuck_timeout = 3.0  #seconds before registering as stuck DOC
+        self.stuck_threshold = 0.03  # minimum allowable movement  DOC
+        self.is_reversing = False # flag for recovery DOC
         self.reverse_start_time = self.get_clock().now()
         self.side_threshold = 0.45
 

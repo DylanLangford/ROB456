@@ -484,7 +484,7 @@ class SendPoints(Node):
 
 		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
 		reachable_pts = []
-		all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
+		all_unseen_pts = find_all_possible_goals(im_thresh)  # DOC exploring code
 	
 		for p in all_unseen_pts:
 			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
@@ -553,14 +553,14 @@ class SendPoints(Node):
 
 			if best_pt_px is not None:
 				best_pt_world = self.from_image_to_map(map_msg, best_pt_px)
-				# Only replace if it's a new, valid point
+				# Only replace if it's a new, valid point DOC
 				self.replace_goal_points([best_pt_world], skip_current=False)
 				goal_loc_in_image = best_pt_px
 			else:
 				self.get_logger().warn("No reachable frontiers found!")
 				goal_loc_in_image = robot_current_loc_in_image
 		else:
-			# FIX: Ensure we don't go out of bounds if next_goal_index was incremented
+			# FIX: Ensure we don't go out of bounds if next_goal_index was incremented DOC
 			idx = max(0, self.next_goal_index - 1)
 			if idx < len(self.goal_points):
 				current_goal_world = self.goal_points[idx]
