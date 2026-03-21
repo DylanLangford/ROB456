@@ -107,8 +107,6 @@ class Lab3Driver(Node):
         self.target.point.x = 0.0
         self.target.point.y = 0.0
 
-        # GUIDE: Declare any variables here
-# YOUR CODE HERE
         self.obstacle_distance = .7          # meters before considering an obstacle DOC
         self.front_angle = 25.0 * pi / 180.0  #span of laser scan used DOC
         self.target_distance = 0.0
@@ -164,7 +162,6 @@ class Lab3Driver(Node):
         t.twist.angular.x = 0.0
         t.twist.angular.y = 0.0
         t.twist.angular.z = 0.0
-
         return t
 
     def _marker_callback(self):
@@ -375,11 +372,6 @@ class Lab3Driver(Node):
         if not self.target:
             return False, 0.0, 0.0
         
-        # # set up to help prevent wiggling when stuck in a corner (if new target given, stop trying to avoid things)
-        # previous = self.previous_point
-        # if self.target != previous:
-        #     self.avoiding = False
-        
         # GUIDE: Use this method to collect obstacle information - is something in front of, to the left, or to 
         # the right of the robot? Start with your stopper code from Lab1
         # YOUR CODE HERE
@@ -389,7 +381,7 @@ class Lab3Driver(Node):
         front_angles = []
         max_turn = np.pi * 0.1
 
-        #Check if scan is valud, append to front_ranges and front_angles if within the front angle
+        #Check if scan is valid, append to front_ranges and front_angles if within the front angle
         for r in scan.ranges:
             if -self.front_angle <= angle <= self.front_angle:
                 if not np.isnan(r) and not np.isinf(r):
@@ -451,8 +443,6 @@ class Lab3Driver(Node):
         # angle to goal
         angle_to_target = atan2(self.target.point.y,
                                 self.target.point.x) 
-        
-        
 
         # set up to help prevent wiggling when stuck in a corner DOC
         previous = self.previous_point
@@ -483,12 +473,10 @@ class Lab3Driver(Node):
             else:
                 t.twist.linear.x = 0.05
 
-        
         obstacle, obs_speed, obs_turn = self.get_obstacle(scan)
 
         if obstacle:
             self.avoiding = True
-            # t.twist.linear.x = obs_speed
             # DOC Trying to speed up the robot, we move faster than normal when not detecting objects. 
             # We implemented code for "avoiding" which is intended to keep turning the robot
             # until it is no longer detecting the obstacle, but this can lead to a lot of wiggling if the 
@@ -499,16 +487,13 @@ class Lab3Driver(Node):
             # obstacle on every scan. 
 
             t.twist.linear.x = obs_speed
-            
             t.twist.angular.z = obs_turn * 2.0
        
-    
         elif not obstacle and self.avoiding:
             t.twist.linear.x = max_speed     
             if min(self.front_ranges) > self.obstacle_distance:
                 self.avoiding = False
 
-        
         if self.print_twist_messages:
             self.get_logger().info(f"Setting twist forward {t.twist.linear.x} angle {t.twist.angular.z}")
         return t			
