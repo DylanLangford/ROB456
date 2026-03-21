@@ -390,6 +390,7 @@ class Lab3Driver(Node):
         front_angles = []
         max_turn = np.pi * 0.1
 
+        #Check if scan is valud, append to front_ranges and front_angles if within the front angle
         for r in scan.ranges:
             if -self.front_angle <= angle <= self.front_angle:
                 if not np.isnan(r) and not np.isinf(r):
