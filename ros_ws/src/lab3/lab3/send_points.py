@@ -545,7 +545,7 @@ class SendPoints(Node):
 		# 				if is_free(im_thresh, try_goal_loc_in_image):
 		# 					goal_loc_in_image = try_goal_loc_in_image
 
-		# DOC: 
+		# DOC
 		# Have points set for new rooms, treat points outside of immediate vicinity as frontier points 
 		if self.completed_all_goals():
 			self.get_logger().info("No goals left, searching for best frontier point...")
@@ -573,10 +573,10 @@ class SendPoints(Node):
 		#   as an exception
 
 		path_pts = []
-		# DOC: Djikstra call, have a priority for generating points closest to you and then going outwards, so if 
+		# DOC Djikstra call, have a priority for generating points closest to you and then going outwards, so if 
 		# you have a reachable point it'll get that one instead of a frontier point that's further away. If you are 
-		# close to the goal point, skip the path planning and just let the robot go there. This was implemented because points would be generated equidistant 
-		# and there is a function to cancel goals after 15 seconds, so the robot would generate points opposite of each other and drive infinitely 
+		# close to the goal point, skip the path planning and just let the robot go there. This was implemented because points could be generated equidistant 
+		# and there is a function to cancel goals after 15 seconds, so the robot would generate points opposite of each other and 15 seconds away then oscillate infinitely 
 		dist_to_goal_px = np.sqrt((robot_current_loc_in_image[0] - goal_loc_in_image[0])**2 + 
                        (robot_current_loc_in_image[1] - goal_loc_in_image[1])**2)
 		

@@ -491,7 +491,7 @@ class Lab3Driver(Node):
         if obstacle:
             self.avoiding = True
             # t.twist.linear.x = obs_speed
-            # DOC: Trying to speed up the robot, we move faster than normal when not detecting objects. 
+            # DOC Trying to speed up the robot, we move faster than normal when not detecting objects. 
             # We implemented code for "avoiding" which is intended to keep turning the robot
             # until it is no longer detecting the obstacle, but this can lead to a lot of wiggling if the 
             # robot is in a corner.
