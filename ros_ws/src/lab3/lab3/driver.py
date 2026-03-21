@@ -65,9 +65,9 @@ class Lab3Driver(Node):
         self.last_pos_x = None
         self.last_pos_y = None
         self.last_move_time = self.get_clock().now()
-        self.stuck_timeout = 3.0  #seconds before registering as stuch
-        self.stuck_threshold = 0.03  # minimum allowable movment 
-        self.is_reversing = False# flag for recovery
+        self.stuck_timeout = 3.0  #seconds before registering as stuch DOC
+        self.stuck_threshold = 0.03  # minimum allowable movment  DOC
+        self.is_reversing = False# flag for recovery DOC
         self.reverse_start_time = self.get_clock().now()
         self.side_threshold = 0.45
 
@@ -109,14 +109,14 @@ class Lab3Driver(Node):
 
         # GUIDE: Declare any variables here
 # YOUR CODE HERE
-        self.obstacle_distance = .7          # meters before considering an obstacle
-        self.front_angle = 25.0 * pi / 180.0  #span of laser scan used
+        self.obstacle_distance = .7          # meters before considering an obstacle DOC
+        self.front_angle = 25.0 * pi / 180.0  #span of laser scan used DOC
         self.target_distance = 0.0
         self.target_angle = 0.0
         self.avoiding = False
         self.count = 5
 
-        # Timer to make sure we publish the target marker (once we get a goal)
+        # Timer to make sure we publish the target marker (once we get a goal) DOC
         self.marker_timer = self.create_timer(1.0, self._marker_callback)
 
         self.count_since_last_scan = 0
@@ -129,18 +129,18 @@ class Lab3Driver(Node):
             curr_x = trans.transform.translation.x
             curr_y = trans.transform.translation.y
             
-            # Calculate distance from last recorded "significant" position
+            # Calculate distance from last recorded position DOC
             dist_moved = sqrt((curr_x - self.last_pos_x)**2 + (curr_y - self.last_pos_y)**2)
             now = self.get_clock().now()
 
-            # If we've moved enough, reset the timer and update position
+            # If we've moved enough, reset the timer and update position DOC
             if dist_moved > self.stuck_threshold:
                 self.last_pos_x = curr_x
                 self.last_pos_y = curr_y
                 self.last_move_time = now
                 return False
 
-            # If we haven't moved enough for too long
+            # If we haven't moved enough for too long DOC
             elapsed = (now - self.last_move_time).nanoseconds / 1e9
             if elapsed > self.stuck_timeout and not self.is_reversing:
                 self.get_logger().warn("STUCK! Initiating recovery...")
@@ -277,9 +277,9 @@ class Lab3Driver(Node):
             elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e9
             if elapsed_time > timeout_duration:
                 self.get_logger().warn(f"Goal Timeout: Spent {timeout_duration}s on one point. Giving up.")
-                break # Exit the loop to trigger "Completed" logic
+                break # Exit the loop and trigger DOC
 
-            if not self.goal:
+            if not self.goal: # if cleared goal stop DOC
                 self.get_logger().info(f"Goal was canceled")
 
                 return result
