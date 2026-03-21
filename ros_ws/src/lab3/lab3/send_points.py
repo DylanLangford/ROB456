@@ -225,7 +225,6 @@ class SendPoints(Node):
 		@param skip_current: Will call skip-current for you after setting up new goals"""
 		# self.next_goal_index = 0
 
-		# # Just doing this to make sure the points you pass in are in the correct form
 		# self.goal_points = []
 		# for p in goal_pts:
 		# 	self.goal_points.append((p[0], p[1]))
@@ -432,6 +431,7 @@ class SendPoints(Node):
 		# GUIDE: Subtract the origin position of the map and then divide by the resolution
 		#   Don't forget to cast to an int
   # YOUR CODE HERE
+		# DOC simple code that takes the map coordinates and converts them to image coordinates because the map is represented as a grid of pixels, and we need to convert to the world coordinates of meters 
 		im_u = (pt_xy[0] - info.origin.position.x)/info.resolution
 		im_v = (pt_xy[1] - info.origin.position.y)/info.resolution
 		# self.get_logger().info(f"before {pt_xy} after {im_u}, {im_v}")
@@ -545,8 +545,8 @@ class SendPoints(Node):
 		# 				if is_free(im_thresh, try_goal_loc_in_image):
 		# 					goal_loc_in_image = try_goal_loc_in_image
 
-		# DOC: 
-		# Have points set for new rooms, 
+		# DOC
+		# Have points set for new rooms, treat points outside of immediate vicinity as frontier points 
 		if self.completed_all_goals():
 			self.get_logger().info("No goals left, searching for best frontier point...")
 			best_pt_px = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image, self.goal_points[-1])
@@ -573,10 +573,13 @@ class SendPoints(Node):
 		#   as an exception
 
 		path_pts = []
-
+		# DOC Djikstra call, have a priority for generating points closest to you and then going outwards, so if 
+		# you have a reachable point it'll get that one instead of a frontier point that's further away. If you are 
+		# close to the goal point, skip the path planning and just let the robot go there. This was implemented because points could be generated equidistant 
+		# and there is a function to cancel goals after 15 seconds, so the robot would generate points opposite of each other and 15 seconds away then oscillate infinitely 
 		dist_to_goal_px = np.sqrt((robot_current_loc_in_image[0] - goal_loc_in_image[0])**2 + 
                        (robot_current_loc_in_image[1] - goal_loc_in_image[1])**2)
-
+		
 		if dist_to_goal_px < 5: # If within ~25cm
 			self.get_logger().info("Already at goal pixel, skipping path planning.")
 		else:
