@@ -241,8 +241,7 @@ class Lab3Driver(Node):
         @ return true/false """
 
 # YOUR CODE HERE
-# if the bot distance to target is less then the threshold accept goal reached
-        return self.distance_to_target() <= self.threshold 
+        return self.distance_to_target() <= self.threshold
 
     def distance_to_target(self):
         """ Communicate with send points - set to distance to target"""
@@ -318,7 +317,6 @@ class Lab3Driver(Node):
     
     def set_target(self):
         # 1. Capture the goal in a local variable. 
-        # If self.goal is set to None by another thread, 'current_goal' stays valid here.
         current_goal = self.goal
         
         if current_goal is None:
@@ -337,7 +335,6 @@ class Lab3Driver(Node):
             # 3. Transform the point
             self.target = do_transform_point(current_goal, transform)
             
-            # 4. CRITICAL: Update the variables your get_twist logic actually uses
             self.target_distance = sqrt(self.target.point.x**2 + self.target.point.y**2)
             self.target_angle = atan2(self.target.point.y, self.target.point.x)
 
@@ -395,6 +392,7 @@ class Lab3Driver(Node):
         front_angles = []
         max_turn = np.pi * 0.1
 
+        #Check if scan is valud, append to front_ranges and front_angles if within the front angle
         for r in scan.ranges:
             if -self.front_angle <= angle <= self.front_angle:
                 if not np.isnan(r) and not np.isinf(r):
@@ -476,7 +474,9 @@ class Lab3Driver(Node):
 
         distance = sqrt(self.target.point.x ** 2 +
                         self.target.point.y ** 2)
-
+        # DOC 
+        # This is the primary obstacle avoidance, that turns when an object is at 
+        # the object threshold
         if not self.avoiding:
             if fabs(angle_to_target) > pi / 2.0:
                 t.twist.linear.x = 0.09
@@ -494,9 +494,20 @@ class Lab3Driver(Node):
         if obstacle:
             self.avoiding = True
             # t.twist.linear.x = obs_speed
+            # DOC: Trying to speed up the robot, we move faster than normal when not detecting objects. 
+            # We implemented code for "avoiding" which is intended to keep turning the robot
+            # until it is no longer detecting the obstacle, but this can lead to a lot of wiggling if the 
+            # robot is in a corner.
+            # To help with this, we added a count variable that only starts the avoiding behavior 
+            # after a certain number of consecutive scans detect the obstacle, and then forces the robot to 
+            # keep turning in the same direction for a few scans after that, even if it doesn't detect the 
+            # obstacle on every scan. 
+
             t.twist.linear.x = obs_speed
             #t.twist.angular.z = obs_turn
             t.twist.angular.z = obs_turn * 2.0
+       
+    
         elif not obstacle and self.avoiding:
             t.twist.linear.x = max_speed     
             if min(self.front_ranges) > self.obstacle_distance:
