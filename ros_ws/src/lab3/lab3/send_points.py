@@ -225,7 +225,6 @@ class SendPoints(Node):
 		@param skip_current: Will call skip-current for you after setting up new goals"""
 		# self.next_goal_index = 0
 
-		# # Just doing this to make sure the points you pass in are in the correct form
 		# self.goal_points = []
 		# for p in goal_pts:
 		# 	self.goal_points.append((p[0], p[1]))
@@ -432,6 +431,7 @@ class SendPoints(Node):
 		# GUIDE: Subtract the origin position of the map and then divide by the resolution
 		#   Don't forget to cast to an int
   # YOUR CODE HERE
+		# DOC simple code that takes the map coordinates and converts them to image coordinates because the map is represented as a grid of pixels, and we need to convert to the world coordinates of meters 
 		im_u = (pt_xy[0] - info.origin.position.x)/info.resolution
 		im_v = (pt_xy[1] - info.origin.position.y)/info.resolution
 		# self.get_logger().info(f"before {pt_xy} after {im_u}, {im_v}")
