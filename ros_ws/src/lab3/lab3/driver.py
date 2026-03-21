@@ -241,6 +241,8 @@ class Lab3Driver(Node):
         @ return true/false """
 
 # YOUR CODE HERE
+# if the bot distance to target is less then the threshold accept goal reached
+
         return self.distance_to_target() <= self.threshold
 
     def distance_to_target(self):
